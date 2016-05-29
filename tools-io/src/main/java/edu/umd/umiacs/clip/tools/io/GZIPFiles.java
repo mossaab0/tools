@@ -94,7 +94,7 @@ public class GZIPFiles {
         Objects.requireNonNull(lines);
         CharsetEncoder encoder = cs.newEncoder();
         OutputStream out = newOutputStream(path, options);
-        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(out), encoder), BUFFER_SIZE)) {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(out), UTF_8.newEncoder().onMalformedInput(IGNORE)), BUFFER_SIZE)) {
             for (CharSequence line : lines) {
                 writer.append(line);
                 writer.newLine();
