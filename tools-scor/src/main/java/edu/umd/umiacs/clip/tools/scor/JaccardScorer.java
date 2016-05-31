@@ -32,8 +32,8 @@ public class JaccardScorer extends Scorer implements Serializable {
                 filter(word -> !word.isEmpty()).collect(toSet());
         Set<String> textTerms = Stream.of(text.split(" ")).
                 filter(word -> !word.isEmpty()).collect(toSet());
-
-        return intersect(queryTerms, textTerms) / (double) denom(queryTerms, textTerms);
+        int denom = denom(queryTerms, textTerms);
+        return denom == 0 ? 0 : intersect(queryTerms, textTerms) / (double) denom;
     }
 
     private int intersect(Set<String> a, Set<String> b) {
