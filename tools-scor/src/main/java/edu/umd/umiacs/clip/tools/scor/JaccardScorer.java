@@ -43,5 +43,4 @@ public class JaccardScorer extends Scorer implements Serializable {
     public int denom(Set<String> a, Set<String> b) {
         return (int) Stream.concat(a.stream(), b.stream()).distinct().count();
     }
-;
 }
