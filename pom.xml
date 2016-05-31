@@ -10,6 +10,7 @@
         <module>tools-io</module>
         <module>tools-lang</module>
         <module>tools-math</module>
+        <module>tools-scor</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
