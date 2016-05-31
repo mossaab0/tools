@@ -80,8 +80,15 @@ public class AllFiles {
         return readAllLines(file.toPath());
     }
 
+    private static String format(String path){
+        if (path.startsWith("~" + File.separator)) {
+            path = System.getProperty("user.home") + path.substring(1);
+        }
+        return path;
+    }
+    
     public static List<String> readAllLines(String path) {
-        File file = new File(path);
+        File file = new File(format(path));
         return !path.contains("*") ? readAllLines(file)
                 : Stream.of(file.getParentFile()
                         .listFiles((dir, name) -> name.matches(file.getName().replace(".", "\\.").replace("*", ".+"))))
@@ -92,6 +99,7 @@ public class AllFiles {
     }
 
     public static List<String> readAllLinesFromResource(String path) {
+        path = format(path);
         return path.endsWith(".gz") ? GZIPFiles.readAllLinesFromResource(path)
                 : path.endsWith(".bz2") ? BZIP2Files.readAllLinesFromResource(path)
                 : readAllLines(System.class.getResourceAsStream(path));
@@ -136,7 +144,7 @@ public class AllFiles {
     }
 
     public static Stream<File> list(String dir) {
-        return list(new File(dir));
+        return list(new File(format(dir)));
     }
 
     public static Stream<String> lines() {
@@ -186,7 +194,7 @@ public class AllFiles {
     }
 
     public static Stream<String> lines(String path) {
-        return lines(new File(path));
+        return lines(new File(format(path)));
     }
 
     public static Path write(Path path, Stream<?> lines, Charset cs, OpenOption... options) {
@@ -223,23 +231,23 @@ public class AllFiles {
     }
 
     public static Path write(String path, Iterable<? extends CharSequence> lines, OpenOption... options) {
-        return write(new File(path), lines, options);
+        return write(new File(format(path)), lines, options);
     }
 
     public static Path write(String path, Iterable<? extends CharSequence> lines, boolean removeOldFile, OpenOption... options) {
         if (removeOldFile) {
-            new File(path).delete();
+            new File(format(path)).delete();
         }
         return write(new File(path), lines, options);
     }
 
     public static Path write(String path, Stream<?> lines, OpenOption... options) {
-        return write(new File(path), lines, options);
+        return write(new File(format(path)), lines, options);
     }
 
     public static Path write(String path, Stream<?> lines, boolean removeOldFile, OpenOption... options) {
         if (removeOldFile) {
-            new File(path).delete();
+            new File(format(path)).delete();
         }
         return write(new File(path), lines, options);
     }
@@ -279,7 +287,7 @@ public class AllFiles {
 
     public static void writeln(String path, String line) {
         try {
-            OutputStream os = new FileOutputStream(path, true);
+            OutputStream os = new FileOutputStream(format(path), true);
             if (path.endsWith(".gz")) {
                 os = new GZIPOutputStream(os);
             } else if (path.endsWith(".bz2")) {
