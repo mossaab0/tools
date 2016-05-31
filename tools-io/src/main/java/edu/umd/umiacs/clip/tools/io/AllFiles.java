@@ -235,8 +235,9 @@ public class AllFiles {
     }
 
     public static Path write(String path, Iterable<? extends CharSequence> lines, boolean removeOldFile, OpenOption... options) {
+        path = format(path);
         if (removeOldFile) {
-            new File(format(path)).delete();
+            new File(path).delete();
         }
         return write(new File(path), lines, options);
     }
@@ -246,8 +247,9 @@ public class AllFiles {
     }
 
     public static Path write(String path, Stream<?> lines, boolean removeOldFile, OpenOption... options) {
+        path = format(path);
         if (removeOldFile) {
-            new File(format(path)).delete();
+            new File(path).delete();
         }
         return write(new File(path), lines, options);
     }
