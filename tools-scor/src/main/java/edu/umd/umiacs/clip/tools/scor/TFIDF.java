@@ -54,6 +54,7 @@ public class TFIDF extends Scorer {
 
     @Override
     public double score(String query, String text) {
+        System.out.println(query + "\t" + text);
         Map<String, Double> queryVec = tfidf(query);
         Map<String, Double> textVec = tfidf(text);
         return dot(queryVec, textVec) / (norm(queryVec) * norm(textVec));
