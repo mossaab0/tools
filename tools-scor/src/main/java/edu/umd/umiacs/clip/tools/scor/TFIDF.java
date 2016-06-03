@@ -18,7 +18,6 @@ package edu.umd.umiacs.clip.tools.scor;
 import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
-import java.io.Serializable;
 import static java.lang.Integer.min;
 import java.util.List;
 import java.util.Map;
@@ -40,9 +39,9 @@ public class TFIDF extends Scorer {
     public TFIDF(String dfPath) {
         DF = new TObjectIntHashMap<>();
         List<String> lines = readAllLines(dfPath);
-        N = new Integer(lines.get(0).split(" ")[1]);
+        N = new Integer(lines.get(0).split("\\s+")[1]);
         for (int i = 1; i < lines.size(); i++) {
-            String[] pair = lines.get(i).split(" ");
+            String[] pair = lines.get(i).split("\\s+");
             int df = new Integer(pair[1]);
             DF.put(pair[0], df);
         }
