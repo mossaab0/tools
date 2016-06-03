@@ -19,6 +19,7 @@ import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import static java.lang.Integer.min;
+import static java.lang.Math.sqrt;
 import java.util.List;
 import java.util.Map;
 import static java.util.function.Function.identity;
@@ -54,7 +55,6 @@ public class TFIDF extends Scorer {
 
     @Override
     public double score(String query, String text) {
-        System.out.println(query + "\t" + text);
         Map<String, Double> queryVec = tfidf(query);
         Map<String, Double> textVec = tfidf(text);
         return dot(queryVec, textVec) / (norm(queryVec) * norm(textVec));
@@ -79,7 +79,7 @@ public class TFIDF extends Scorer {
 
     private double norm(Map<String, Double> vec) {
         return vec.isEmpty() ? 1
-                : vec.values().parallelStream().mapToDouble(v -> v * v).sum();
+                : sqrt(vec.values().parallelStream().mapToDouble(v -> v * v).sum());
     }
 
     public int df(String word) {
