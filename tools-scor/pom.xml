@@ -29,8 +29,8 @@
         </dependency>
         <dependency>
             <groupId>org.nd4j</groupId>
-            <artifactId>nd4j-jblas</artifactId>
-            <version>0.4-rc3.6</version>
+            <artifactId>nd4j-native</artifactId>
+            <version>0.4-rc3.9</version>
         </dependency>
         <dependency>
             <groupId>org.deeplearning4j</groupId>
