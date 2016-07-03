@@ -15,7 +15,6 @@
  */
 package edu.umd.umiacs.clip.tools.scor;
 
-import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
 import gnu.trove.map.TObjectIntMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,12 +24,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import static java.util.function.Function.identity;
 import java.util.stream.Collectors;
-import static java.util.stream.Collectors.reducing;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
+import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
+import static java.util.stream.Collectors.reducing;
+import static java.util.stream.Collectors.groupingBy;
 
 /**
  *
@@ -51,7 +51,7 @@ public class PSQW2VBM25Scorer extends W2VBM25Scorer {
 
     @Override
     public double score(String query, String text) {
-        return scoreStemmedWeighted(getWeightedQuery(query), text);
+        return scoreWeighted(getWeightedQuery(query), text);
     }
 
     private List<Map<String, Double>> getWeightedQuery(String query) {
@@ -61,7 +61,6 @@ public class PSQW2VBM25Scorer extends W2VBM25Scorer {
                     filter(word -> !word.isEmpty()).distinct().
                     map(this::getWeightedTerm).collect(toList());
             weightedQueries.put(query, weightedQuery);
-            //System.out.println(query + " => " + weightedQuery);
         }
         return weightedQuery;
     }
@@ -84,7 +83,7 @@ public class PSQW2VBM25Scorer extends W2VBM25Scorer {
         return oldMap;
     }
 
-    private double scoreStemmedWeighted(List<Map<String, Double>> wightedQuery, String text) {
+    private double scoreWeighted(List<Map<String, Double>> wightedQuery, String text) {
         Map<String, Integer> docTerms = Stream.of(text.split(" ")).
                 filter(word -> !word.isEmpty()).
                 collect(groupingBy(identity(), reducing(0, e -> 1, Integer::sum)));

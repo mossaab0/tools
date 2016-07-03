@@ -18,7 +18,6 @@ package edu.umd.umiacs.clip.tools.scor;
 import gnu.trove.map.TObjectIntMap;
 import java.io.File;
 import java.io.IOException;
-import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 
 /**
@@ -40,7 +39,7 @@ public abstract class W2VBM25Scorer extends BM25Scorer {
 
     public <T extends W2VBM25Scorer> T loadWord2Vec(String path) {
         try {
-            word2vec = WordVectorSerializer.loadGoogleModel(new File(path), false);
+            word2vec = WordVectorUtils.loadTxt(new File(path));
         } catch (IOException e) {
             e.printStackTrace();
         }
