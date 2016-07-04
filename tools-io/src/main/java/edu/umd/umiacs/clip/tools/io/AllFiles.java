@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import static java.util.stream.Collectors.toList;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
@@ -80,22 +79,26 @@ public class AllFiles {
         return readAllLines(file.toPath());
     }
 
-    private static String format(String path){
+    private static String format(String path) {
         if (path.startsWith("~" + File.separator)) {
             path = System.getProperty("user.home") + path.substring(1);
         }
         return path;
     }
-    
+
     public static List<String> readAllLines(String path) {
         File file = new File(format(path));
-        return !path.contains("*") ? readAllLines(file)
-                : Stream.of(file.getParentFile()
-                        .listFiles((dir, name) -> name.matches(file.getName().replace(".", "\\.").replace("*", ".+"))))
+        if (!path.contains("*")) {
+            return readAllLines(file);
+        }
+        List<String> lines = new ArrayList();
+        Stream.of(file.getParentFile()
+                .listFiles((dir, name) -> name.matches(file.getName().replace(".", "\\.").replace("*", ".+"))))
                 .sorted()
                 .map(AllFiles::readAllLines)
                 .flatMap(Collection::stream)
-                .collect(toList());
+                .forEach(lines::add);
+        return lines;
     }
 
     public static List<String> readAllLinesFromResource(String path) {
