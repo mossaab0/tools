@@ -34,6 +34,13 @@ public class D2VScorer extends Scorer {
     private transient WordVectors word2vec;
     private final Map<String, INDArray> map = new HashMap<>();
 
+    public D2VScorer() {
+    }
+
+    public D2VScorer(WordVectors word2vec) {
+        this.word2vec = word2vec;
+    }
+
     public <T extends D2VScorer> T loadWord2Vec(String path) {
         try {
             word2vec = WordVectorUtils.loadTxt(new File(path));
