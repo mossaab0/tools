@@ -15,13 +15,19 @@
  */
 package edu.umd.umiacs.clip.tools.lang;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import static java.util.function.Function.identity;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import java.util.stream.Stream;
 
 /**
@@ -85,10 +91,40 @@ public class LangUtils {
         return sb.toString().trim();
     }
 
+    //From http://stackoverflow.com/questions/1670862
+    private static <T> Set<Set<T>> powerSet(Set<T> originalSet) {
+        Set<Set<T>> sets = new HashSet<>();
+        if (originalSet.isEmpty()) {
+            sets.add(new HashSet<>());
+            return sets;
+        }
+        List<T> list = new ArrayList<>(originalSet);
+        T head = list.get(0);
+        Set<T> rest = new HashSet<>(list.subList(1, list.size()));
+        powerSet(rest).stream().forEach(set -> {
+            Set<T> newSet = new HashSet<>();
+            newSet.add(head);
+            newSet.addAll(set);
+            sets.add(newSet);
+            sets.add(set);
+        });
+        return sets;
+    }
+
+    public static String powerSet(String input, String sep) {
+        return String.join(" ", powerSet(Stream.of(input.trim().split("\\s+")).
+                filter(word -> !word.isEmpty()).collect(toSet())).
+                parallelStream().
+                filter(set -> !set.isEmpty()).
+                map(set -> String.join(sep, set.stream().collect(toList()))).
+                collect(toList()));
+    }
+
     public static void main(String[] args) {
         String input = "How are you?\n?today?? :-)";
         //System.out.println(ngrams(input, 1, 3, "_", false));
         //System.out.println(toFreqMap(""));
-        System.out.println(tokenizeKeepPunctuation(input));
+        //System.out.println(tokenizeKeepPunctuation(input));
+        System.out.println(powerSet(input, "_"));
     }
 }
