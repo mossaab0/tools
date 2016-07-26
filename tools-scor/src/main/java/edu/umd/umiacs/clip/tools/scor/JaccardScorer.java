@@ -27,13 +27,19 @@ import java.util.stream.Stream;
 public class JaccardScorer extends Scorer implements Serializable {
 
     @Override
-    public double score(String query, String text) {
-        Set<String> queryTerms = Stream.of(query.split(" ")).
-                filter(word -> !word.isEmpty()).collect(toSet());
-        Set<String> textTerms = Stream.of(text.split(" ")).
-                filter(word -> !word.isEmpty()).collect(toSet());
-        int denom = denom(queryTerms, textTerms);
-        return denom == 0 ? 0 : intersect(queryTerms, textTerms) / (double) denom;
+    public Set<String> getProcessedQuery(String query) {
+        return Stream.of(query.split(" ")).filter(word -> !word.isEmpty()).collect(toSet());
+    }
+    
+    @Override
+    public Set<String> getProcessedText(String text) {
+        return Stream.of(text.split(" ")).filter(word -> !word.isEmpty()).collect(toSet());
+    }
+
+    @Override
+    public double scoreProcessed(Object query, Object text) {
+        int denom = denom((Set<String>) query, (Set<String>) text);
+        return denom == 0 ? 0 : intersect((Set<String>)query, (Set<String>)text) / (double) denom;
     }
 
     private int intersect(Set<String> a, Set<String> b) {

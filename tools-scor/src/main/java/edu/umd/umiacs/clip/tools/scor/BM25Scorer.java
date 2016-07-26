@@ -16,7 +16,9 @@
 package edu.umd.umiacs.clip.tools.scor;
 
 import gnu.trove.map.TObjectIntMap;
+import java.util.List;
 import java.util.Map;
+import static java.util.stream.Collectors.toList;
 import java.util.stream.Stream;
 
 /**
@@ -38,14 +40,23 @@ public class BM25Scorer extends TFIDF {
     }
 
     @Override
-    public double score(String query, String text) {
-        Map<String, Integer> docTerms = tf(text);
+    public Map<String, Integer> getProcessedText(String text) {
+        return tf(text);
+    }
+
+    @Override
+    public Object getProcessedQuery(String query) {
+        return Stream.of(query.split(" ")).filter(word -> !word.isEmpty()).collect(toList());
+    }
+
+    @Override
+    public double scoreProcessed(Object query, Object text) {
+        Map<String, Integer> docTerms = (Map<String, Integer>) text;
         int length = docTerms.values().stream().mapToInt(f -> f).sum();
-        return Stream.of(query.split(" ")).filter(word -> !word.isEmpty()).
-                filter(docTerms::containsKey).
+        return ((List<String>) query).stream().filter(docTerms::containsKey).
                 mapToDouble(word -> bm25(docTerms.get(word), df(word), length)).sum();
     }
-    
+
     private double idf(double df) {
         return Math.log((N - df + 0.5) / (df + 0.5));
     }

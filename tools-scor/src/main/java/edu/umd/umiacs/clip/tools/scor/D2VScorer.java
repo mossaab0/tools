@@ -18,9 +18,7 @@ package edu.umd.umiacs.clip.tools.scor;
 import java.io.File;
 import java.io.IOException;
 import static java.util.Arrays.asList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
@@ -32,7 +30,6 @@ import org.nd4j.linalg.factory.Nd4j;
 public class D2VScorer extends Scorer {
 
     private transient WordVectors word2vec;
-    private final Map<String, INDArray> map = new HashMap<>();
 
     public D2VScorer() {
     }
@@ -59,7 +56,8 @@ public class D2VScorer extends Scorer {
         return word2vec;
     }
 
-    private INDArray getVector(String text) {
+    @Override
+    public INDArray getProcessedText(String text) {
         INDArray vector = Nd4j.zeros(200);
         List<String> words = asList(text.split("\\s+"));
         words.parallelStream().filter(word -> word2vec.hasWord(word)).
@@ -68,17 +66,13 @@ public class D2VScorer extends Scorer {
         return vector.divi(words.size());
     }
 
-    private INDArray getQueryVector(String query) {
-        INDArray vector = map.get(query);
-        if (vector == null) {
-            vector = getVector(query);
-            map.put(query, vector);
-        }
-        return vector;
+    @Override
+    public INDArray getProcessedQuery(String query) {
+        return getProcessedText(query);
     }
 
     @Override
-    public double score(String query, String text) {
-        return 1 - getQueryVector(query).distance2(getVector(text));
+    public double scoreProcessed(Object query, Object text) {
+        return 1 - ((INDArray) query).distance2((INDArray) text);
     }
 }

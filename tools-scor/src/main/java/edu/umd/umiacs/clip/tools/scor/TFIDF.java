@@ -53,11 +53,12 @@ public class TFIDF extends Scorer {
         this.N = N;
     }
 
-    @Override
-    public double score(String query, String text) {
-        Map<String, Double> queryVec = tfidf(query);
-        Map<String, Double> textVec = tfidf(text);
-        return dot(queryVec, textVec) / (norm(queryVec) * norm(textVec));
+    public TObjectIntMap<String> getDF() {
+        return DF;
+    }
+
+    public int getN() {
+        return N;
     }
 
     public Map<String, Integer> tf(String doc) {
@@ -69,7 +70,7 @@ public class TFIDF extends Scorer {
     private Map<String, Double> tfidf(String doc) {
         return tf(doc).entrySet().stream().
                 collect(toMap(entry -> entry.getKey(),
-                                entry -> entry.getValue() * idf(df(entry.getKey()))));
+                        entry -> entry.getValue() * idf(df(entry.getKey()))));
     }
 
     private double dot(Map<String, Double> v1, Map<String, Double> v2) {
@@ -88,5 +89,22 @@ public class TFIDF extends Scorer {
 
     private double idf(double df) {
         return Math.log(N / df);
+    }
+
+    @Override
+    public double scoreProcessed(Object query, Object text) {
+        Map<String, Double> queryVec = (Map<String, Double>) query;
+        Map<String, Double> textVec = (Map<String, Double>) text;
+        return dot(queryVec, textVec) / (norm(queryVec) * norm(textVec));
+    }
+
+    @Override
+    public Object getProcessedQuery(String query) {
+        return tfidf(query);
+    }
+
+    @Override
+    public Object getProcessedText(String text) {
+        return tfidf(text);
     }
 }

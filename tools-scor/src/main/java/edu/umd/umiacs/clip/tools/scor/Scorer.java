@@ -21,5 +21,13 @@ package edu.umd.umiacs.clip.tools.scor;
  */
 public abstract class Scorer {
 
-    public abstract double score(String query, String text);
+    public final double score(String query, String text) {
+        return scoreProcessed(getProcessedQuery(query), getProcessedText(text));
+    }
+
+    public abstract double scoreProcessed(Object query, Object text);
+
+    public abstract Object getProcessedQuery(String query);
+
+    public abstract Object getProcessedText(String text);
 }
