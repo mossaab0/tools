@@ -21,6 +21,7 @@ package edu.umd.umiacs.clip.tools.scor;
  */
 public abstract class Scorer {
 
+    @Deprecated
     public final double score(String query, String text) {
         return scoreProcessed(getProcessedQuery(query), getProcessedText(text));
     }
@@ -30,4 +31,9 @@ public abstract class Scorer {
     public abstract Object getProcessedQuery(String query);
 
     public abstract Object getProcessedText(String text);
+    
+    @Override
+    public String toString(){
+        return getClass().getSimpleName();
+    }
 }
