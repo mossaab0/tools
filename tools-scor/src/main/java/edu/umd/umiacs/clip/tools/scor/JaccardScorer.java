@@ -28,7 +28,7 @@ public class JaccardScorer extends Scorer implements Serializable {
 
     @Override
     public Set<String> getProcessedQuery(String query) {
-        return Stream.of(query.split(" ")).filter(word -> !word.isEmpty()).collect(toSet());
+        return getProcessedText(query);
     }
     
     @Override

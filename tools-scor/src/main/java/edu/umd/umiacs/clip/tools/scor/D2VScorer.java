@@ -21,6 +21,7 @@ import static java.util.Arrays.asList;
 import java.util.List;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.api.ops.impl.accum.distances.CosineSimilarity;
 import org.nd4j.linalg.factory.Nd4j;
 
 /**
@@ -60,10 +61,12 @@ public class D2VScorer extends Scorer {
     public INDArray getProcessedText(String text) {
         INDArray vector = Nd4j.zeros(200);
         List<String> words = asList(text.split("\\s+"));
-        words.parallelStream().filter(word -> word2vec.hasWord(word)).
-                map(word -> word2vec.getWordVectorMatrix(word)).
-                forEach(vector::addi);
-        return vector.divi(words.size());
+        int size = (int) words.parallelStream().
+                filter(word2vec::hasWord).
+                map(word2vec::getWordVectorMatrixNormalized).
+                peek(vector::addi).
+                count();
+        return vector.divi(size);
     }
 
     @Override
@@ -73,6 +76,9 @@ public class D2VScorer extends Scorer {
 
     @Override
     public double scoreProcessed(Object query, Object text) {
-        return 1 - ((INDArray) query).distance2((INDArray) text);
+        double val = Nd4j.getExecutioner().
+                execAndReturn(new CosineSimilarity((INDArray) query, (INDArray) text)).
+                getFinalResult().doubleValue();
+        return Double.isFinite(val) ? val : 0;
     }
 }
