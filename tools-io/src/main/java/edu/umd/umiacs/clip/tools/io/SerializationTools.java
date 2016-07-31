@@ -31,16 +31,19 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream
 public class SerializationTools {
 
     public static void serializeAndOverride(String path, Object object) {
-        new File(path).delete();
-        new File(path).getParentFile().mkdirs();
+        String tmp = path + "._SAVING";
+        new File(tmp).delete();
+        new File(tmp).getParentFile().mkdirs();
 
         try (ObjectOutputStream out = new ObjectOutputStream(new BZip2CompressorOutputStream(new FileOutputStream(path)))) {
             out.writeObject(object);
+            new File(path).delete();
+            new File(tmp).renameTo(new File(path));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    
+
     public static Object deserialize(String path) {
         try (ObjectInputStream in = new ObjectInputStream(new BZip2CompressorInputStream(new FileInputStream(path)))) {
             return in.readObject();
