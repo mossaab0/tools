@@ -35,7 +35,7 @@ public class SerializationTools {
         new File(tmp).delete();
         new File(tmp).getParentFile().mkdirs();
 
-        try (ObjectOutputStream out = new ObjectOutputStream(new BZip2CompressorOutputStream(new FileOutputStream(path)))) {
+        try (ObjectOutputStream out = new ObjectOutputStream(new BZip2CompressorOutputStream(new FileOutputStream(tmp)))) {
             out.writeObject(object);
             new File(path).delete();
             new File(tmp).renameTo(new File(path));
