@@ -26,7 +26,7 @@ import static java.util.Arrays.asList;
 public class TwitterNormalizer {
 
     public static String normalizeArTweet(String s) {
-        return String.join(" ", asList(ArabicUtils.normalizeFull(s.replaceAll("\\s+", " ").replace("RT ", " ").replaceAll("@[^ ]+", " USER ").replaceAll("http[^ ]+", " URL ").replace("#", "HASHTAG").replaceAll("\\s+", " ").trim()).replaceAll("(.+?)\\1{2,}", "$1").split("\\s+|(?=\\p{Punct})|(?<=\\p{Punct})"))).replace("HASHTAG", "#");
+        return String.join(" ", asList(ArabicUtils.normalizeFull(s.replaceAll("\\s+", " ").replace("RT ", " ").replaceAll("@[^ ]+", " USER ").replaceAll("http[^ ]+", " URL ").replace("#", "HASHTAG").replace("_", "UNDERSCORE").replaceAll("\\s+", " ").trim()).replaceAll("(.+?)\\1{2,}", "$1").split("\\s+|(?=\\p{Punct})|(?<=\\p{Punct})"))).replace("HASHTAG", "#");
     }
 
     public static String normalizeAndStemArTweet(String s) {
@@ -44,8 +44,14 @@ public class TwitterNormalizer {
     public static String normalizeEnTweetDeep(String s) {
         return String.join(" ", asList(normalizeEnTweetDeepKeepPunctuation(s).split("\\s+|(?=\\p{Punct})|(?<=\\p{Punct})")));
     }
-    
+
     public static String normalizeEnTweetDeepKeepPunctuation(String s) {
         return EmoticonUtils.removeFaces(s.replaceAll("\\s+", " ").replace("RT ", " ").replaceAll("@[^ ]+", " ").replaceAll("http[^ ]+", " ").replace("#", " ").replaceAll("\\s+", " ").trim()).replaceAll("(.+?)\\1{2,}", "$1");
+    }
+
+    public static void main(String[] args) {
+        String input = "لماذا يصعب علي فهم هذا الأمر؟! #سؤال_وجودي";
+        String output = normalizeArTweet(input);
+        System.out.println(output);
     }
 }
