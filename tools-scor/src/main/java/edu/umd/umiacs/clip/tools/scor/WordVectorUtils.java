@@ -121,7 +121,7 @@ public class WordVectorUtils {
         lines(input).
                 filter(line -> {
                     String[] fields = line.split(" ");
-                    return fields.length > 2 && words.contains(fields[0]);
+                    return fields.length > 2 && allWords.contains(fields[0]);
                 }).forEach(lines::add);
         lines.add(0, lines.size() + " " + (lines.get(0).split(" ").length - 1));
         write(output, lines, REMOVE_OLD_FILE);
