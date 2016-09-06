@@ -30,7 +30,7 @@ public class TwitterNormalizer {
     }
 
     public static String replaceArQuestionRemoveRTAndUserAndURLSepPunctLowCase(String s) {
-        return String.join(" ", asList(EmoticonUtils.normalizeFaces(s.replace("؟", "?").replaceAll("\\s+", " ").replace("RT ", " ").toLowerCase().replaceAll("@[^ ]+", " USER ").replaceAll("http[^ ]+", " URL ").replaceAll("\\s+", " ").trim()).replaceAll("(.+?)\\1{2,}", "$1").split("\\s+|(?=\\p{Punct})|(?<=\\p{Punct})"))).replaceAll("\\s+", " ");
+        return String.join(" ", asList(ArabicUtils.normalizeFull(s.replace("؟", "?").replaceAll("\\s+", " ").replace("RT ", " ").toLowerCase().replaceAll("@[^ ]+", " USER ").replaceAll("http[^ ]+", " URL ").replaceAll("\\s+", " ").trim()).replaceAll("(.+?)\\1{2,}", "$1").split("\\s+|(?=\\p{Punct})|(?<=\\p{Punct})"))).replaceAll("\\s+", " ");
     }
 
     public static String normalizeAndStemArTweet(String s) {
