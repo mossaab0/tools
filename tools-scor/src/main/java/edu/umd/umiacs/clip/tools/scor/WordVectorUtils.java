@@ -16,6 +16,9 @@
 package edu.umd.umiacs.clip.tools.scor;
 
 import static edu.umd.umiacs.clip.tools.io.AllFiles.BUFFER_SIZE;
+import static edu.umd.umiacs.clip.tools.io.AllFiles.lines;
+import static edu.umd.umiacs.clip.tools.io.AllFiles.write;
+import static edu.umd.umiacs.clip.tools.io.AllFiles.REMOVE_OLD_FILE;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,7 +28,9 @@ import static java.nio.charset.CodingErrorAction.IGNORE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.newInputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -107,5 +112,18 @@ public class WordVectorUtils {
         vectors.setLookupTable(lookupTable);
         vectors.setVocab(cache);
         return vectors;
+    }
+
+    public static void subset(String input, String output, Set<String> words) {
+        Set<String> allWords = new HashSet<>(words);
+        allWords.add("</s>");
+        List<String> lines = new ArrayList<>();
+        lines(input).
+                filter(line -> {
+                    String[] fields = line.split(" ");
+                    return fields.length > 2 && words.contains(fields[0]);
+                }).forEach(lines::add);
+        lines.add(0, lines.size() + " " + (lines.get(0).split(" ").length - 1));
+        write(output, lines, REMOVE_OLD_FILE);
     }
 }
