@@ -56,42 +56,25 @@ public class WordVectorUtils {
     * @author raver119
      */
     public static WordVectors loadTxt(File vectorsFile) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new BZip2CompressorInputStream(new BufferedInputStream(newInputStream(vectorsFile.toPath()), BUFFER_SIZE)), UTF_8.newDecoder().onMalformedInput(IGNORE)));
         VocabCache cache = new InMemoryLookupCache();
-
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new BZip2CompressorInputStream(new BufferedInputStream(newInputStream(vectorsFile.toPath()), BUFFER_SIZE)), UTF_8.newDecoder().onMalformedInput(IGNORE)));
         LineIterator iter = IOUtils.lineIterator(reader);
-        String line;
-        boolean hasHeader = false;
-        if (iter.hasNext()) {
-            line = iter.nextLine();    // skip header line
-            //look for spaces
-            if (!line.contains(" ")) {
-                hasHeader = true;
-            }
-        }
-
-        //reposition buffer to be one line ahead
-        if (hasHeader) {
-            iter.close();
-            iter = IOUtils.lineIterator(reader);
-            iter.nextLine();
-        }
-
         List<INDArray> arrays = new ArrayList<>();
         while (iter.hasNext()) {
-            line = iter.nextLine();
-            String[] split = line.split(" ");
-            String word = split[0];
-            VocabWord word1 = new VocabWord(1.0, word);
-            cache.addToken(word1);
-            cache.addWordToIndex(cache.numWords(), word);
-            word1.setIndex(cache.numWords());
-            cache.putVocabWord(word);
-            INDArray row = Nd4j.create(Nd4j.createBuffer(split.length - 1));
-            for (int i = 1; i < split.length; i++) {
-                row.putScalar(i - 1, Float.parseFloat(split[i]));
+            String[] split = iter.nextLine().split(" ");
+            if (split.length > 2) {
+                String word = split[0];
+                VocabWord word1 = new VocabWord(1.0, word);
+                cache.addToken(word1);
+                cache.addWordToIndex(cache.numWords(), word);
+                word1.setIndex(cache.numWords());
+                cache.putVocabWord(word);
+                INDArray row = Nd4j.create(Nd4j.createBuffer(split.length - 1));
+                for (int i = 1; i < split.length; i++) {
+                    row.putScalar(i - 1, Float.parseFloat(split[i]));
+                }
+                arrays.add(row);
             }
-            arrays.add(row);
         }
 
         INDArray syn = Nd4j.create(new int[]{arrays.size(), arrays.get(0).columns()});
@@ -99,14 +82,14 @@ public class WordVectorUtils {
             syn.putRow(i, arrays.get(i));
         }
 
+        iter.close();
+
         InMemoryLookupTable lookupTable = (InMemoryLookupTable) new InMemoryLookupTable.Builder()
                 .vectorLength(arrays.get(0).columns())
                 .useAdaGrad(false).cache(cache)
                 .build();
         Nd4j.clearNans(syn);
         lookupTable.setSyn0(syn);
-
-        iter.close();
 
         WordVectorsImpl vectors = new WordVectorsImpl();
         vectors.setLookupTable(lookupTable);
@@ -118,11 +101,10 @@ public class WordVectorUtils {
         Set<String> allWords = new HashSet<>(words);
         allWords.add("</s>");
         List<String> lines = new ArrayList<>();
-        lines(input).
-                filter(line -> {
-                    String[] fields = line.split(" ");
-                    return fields.length > 2 && words.contains(fields[0]);
-                }).forEach(lines::add);
+        lines(input).filter(line -> {
+            String[] fields = line.split(" ");
+            return fields.length > 2 && words.contains(fields[0]);
+        }).forEach(lines::add);
         lines.add(0, lines.size() + " " + (lines.get(0).split(" ").length - 1));
         write(output, lines, REMOVE_OLD_FILE);
     }
