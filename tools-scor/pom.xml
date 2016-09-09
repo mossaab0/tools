@@ -20,7 +20,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-nop</artifactId>
-            <version>1.7.10</version>
+            <version>1.7.21</version>
         </dependency>
         <dependency>
             <groupId>net.sf.trove4j</groupId>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>deeplearning4j-nlp</artifactId>
-            <version>0.4-rc3.8</version>
+            <version>0.5.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.lucene</groupId>
