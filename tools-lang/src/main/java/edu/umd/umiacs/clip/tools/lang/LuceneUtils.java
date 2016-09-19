@@ -54,7 +54,7 @@ public class LuceneUtils {
     }
 
     public static String krovetzStem(String s) {
-        return stem(KROVETZ, s);
+        return stem(KROVETZ, s.toLowerCase());
     }
 
     private static String stem(Analyzer analyzer, String s) {
