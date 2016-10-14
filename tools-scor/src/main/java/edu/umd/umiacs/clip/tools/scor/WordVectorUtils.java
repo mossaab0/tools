@@ -16,8 +16,9 @@
 package edu.umd.umiacs.clip.tools.scor;
 
 import static edu.umd.umiacs.clip.tools.io.AllFiles.lines;
-import static edu.umd.umiacs.clip.tools.io.AllFiles.write;
+import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
 import static edu.umd.umiacs.clip.tools.io.AllFiles.REMOVE_OLD_FILE;
+import static edu.umd.umiacs.clip.tools.io.AllFiles.write;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -83,15 +84,20 @@ public class WordVectorUtils {
         return vectors;
     }
 
-    public static void subset(String input, String output, Set<String> words) {
+    public static void subset(String input, String output, Set<String> words, boolean loadOldVectorToMemory) {
         Set<String> allWords = new HashSet<>(words);
         allWords.add("</s>");
         List<String> lines = new ArrayList<>();
-        lines(input).filter(line -> {
-            String[] fields = line.split(" ");
-            return fields.length > 2 && allWords.contains(fields[0]);
-        }).forEach(lines::add);
+        (loadOldVectorToMemory ? readAllLines(input).parallelStream() : lines(input)).
+                filter(line -> {
+                    String[] fields = line.split(" ");
+                    return fields.length > 2 && allWords.contains(fields[0]);
+                }).forEach(lines::add);
         lines.add(0, lines.size() + " " + (lines.get(0).split(" ").length - 1));
         write(output, lines, REMOVE_OLD_FILE);
+    }
+
+    public static void subset(String input, String output, Set<String> words) {
+        subset(input, output, words, false);
     }
 }
