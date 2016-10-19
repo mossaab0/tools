@@ -20,6 +20,11 @@
         </dependency>
         <dependency>
             <groupId>edu.umd.umiacs.clip.tools</groupId>
+            <artifactId>tools-scor</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.umd.umiacs.clip.tools</groupId>
             <artifactId>tools-lang</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
@@ -32,16 +37,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.nd4j</groupId>
-            <artifactId>nd4j-jblas</artifactId>
-            <version>0.4-rc3.6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.deeplearning4j</groupId>
-            <artifactId>deeplearning4j-nlp</artifactId>
-            <version>0.4-rc3.9</version>
         </dependency>
     </dependencies>
 </project>
