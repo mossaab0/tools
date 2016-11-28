@@ -57,7 +57,7 @@ public class LuceneUtils {
         return stem(KROVETZ, s.toLowerCase());
     }
 
-    private static String stem(Analyzer analyzer, String s) {
+    public static String stem(Analyzer analyzer, String s) {
         StringBuilder sb = new StringBuilder();
         try {
             try (TokenStream stream = analyzer.tokenStream(null, new StringReader(s))) {
