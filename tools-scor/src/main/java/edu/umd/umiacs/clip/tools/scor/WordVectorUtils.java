@@ -74,6 +74,7 @@ public class WordVectorUtils {
         InMemoryLookupTable lookupTable = (InMemoryLookupTable) new InMemoryLookupTable.Builder()
                 .vectorLength(arrays.get(0).columns())
                 .useAdaGrad(false).cache(cache)
+                .useHierarchicSoftmax(false)
                 .build();
         Nd4j.clearNans(syn);
         lookupTable.setSyn0(syn);
