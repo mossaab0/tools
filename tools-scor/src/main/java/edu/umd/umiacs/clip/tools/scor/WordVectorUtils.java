@@ -84,6 +84,10 @@ public class WordVectorUtils {
         return vectors;
     }
 
+    public static WordVectors loadTxt(String path) throws IOException {
+        return loadTxt(new File(path));
+    }
+
     public static void subset(String input, String output, Set<String> words, boolean loadOldVectorToMemory) {
         Set<String> allWords = new HashSet<>(words);
         allWords.add("</s>");
