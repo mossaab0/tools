@@ -199,11 +199,11 @@ public class ArabicUtils {
     public static final char LEFT_CURLY_BRACKET = '\u007B';
     public static final char RIGHT_DOUBLE_QUOTATION_MARK = '\u00BB';
 
-    public static final String AllArabicLetters = HAMZA + "-" + GHAIN + FEH + "-" + YEH;
-    public static final String AllHindiDigits = INDIC_DIGIT_ZERO + "-" + INDIC_DIGIT_NINE;
-    public static final String AllArabicLettersAndHindiDigits = AllArabicLetters + AllHindiDigits;
-    public static final String AllArabicDiacretics = FATHATAN + "-" + SUKUN;
-    public static final String ALLDelimiters = (NULL + "-" + SLASH)
+    public static final String ALL_ARABIC_LETTERS = HAMZA + "-" + GHAIN + FEH + "-" + YEH;
+    public static final String ALL_HINDI_DIGITS = INDIC_DIGIT_ZERO + "-" + INDIC_DIGIT_NINE;
+    public static final String ALL_ARABIC_LETTERS_AND_HINDI_DIGITS = ALL_ARABIC_LETTERS + ALL_HINDI_DIGITS;
+    public static final String ALL_ARABIC_DIACRETICS = FATHATAN + "-" + SUKUN;
+    public static final String ALL_DELIMITERS = (NULL + "-" + SLASH)
             + (COLON + "-" + AT)
             + (LEFT_SQUARE_BRACKET + "-" + RIGHT_SQUARE_BRACKET)
             + (LEFT_CURLY_BRACKET + "-" + RIGHT_DOUBLE_QUOTATION_MARK)
@@ -212,29 +212,15 @@ public class ArabicUtils {
             + ("\u0600-" + COMMA)
             + "\u06D4-\u06ED";
 
-    private static final Pattern lettersDigitsSymbolsPattern = Pattern.compile("([" + AllArabicLettersAndHindiDigits + "a-zA-Z0-9,.@/?%+]*)?([^" + AllArabicLettersAndHindiDigits + "a-zA-Z0-9,.@/?%+]*)?");
-    private static final Pattern lettersDigitsPattern = Pattern.compile("([" + AllArabicLettersAndHindiDigits + "a-zA-Z0-9]*)?([^" + AllArabicLettersAndHindiDigits + "a-zA-Z0-9]*)?");
-    private static final Pattern emailPattern = Pattern.compile("^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
-
-    public static final String prefixes[] = {
-        // "ال", "و", "ف", "ب", "ك", "ل", "لل"
-        "" + ALEF + LAM, "" + WAW, "" + FEH, "" + BEH, "" + KAF, "" + LAM, "" + LAM + LAM
-    };
-
-    public static final String suffixes[] = {
-        // "ه", "ها", "ك", "ي", "هما", "كما", "نا", "كم", "هم", "هن", "كن",
-        // "ا", "ان", "ين", "ون", "وا", "ات", "ت", "ن", "ة"
-        "\u0647", "\u0647\u0627", "\u0643", "\u064a", "\u0647\u0645\u0627", "\u0643\u0645\u0627", "\u0646\u0627", "\u0643\u0645", "\u0647\u0645", "\u0647\u0646", "\u0643\u0646",
-        "\u0627", "\u0627\u0646", "\u064a\u0646", "\u0648\u0646", "\u0648\u0627", "\u0627\u062a", "\u062a", "\u0646", "\u0629"
-    };
+    private static final Pattern LETTERS_DIGITS_SYMBOLS_PATTERN = Pattern.compile("([" + ALL_ARABIC_LETTERS_AND_HINDI_DIGITS + "a-zA-Z0-9,.@/?%+]*)?([^" + ALL_ARABIC_LETTERS_AND_HINDI_DIGITS + "a-zA-Z0-9,.@/?%+]*)?");
+    private static final Pattern LETTERS_DIGITS_PATTERN = Pattern.compile("([" + ALL_ARABIC_LETTERS_AND_HINDI_DIGITS + "a-zA-Z0-9]*)?([^" + ALL_ARABIC_LETTERS_AND_HINDI_DIGITS + "a-zA-Z0-9]*)?");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
 
     public static String patternTonkenize(String string) {
         return patternTonkenize(string, false);
     }
 
     public static String patternTonkenize(String string, boolean reductRepetitions) {
-        //String[] seperator = {"~", "»", "«", "؛", "<", ">", "_", "\"", "-", "،", "!", "#", "?", "^", "&", "*", "(", ")", "[", "]", "{", "}", "|", "\\", "-", "<", ">", "\"", "?", "،", "؟", ";", ":"};
-        //List<String> seperatorList = Arrays.asList(seperator);
         string = string.replaceAll("((https://www.|http://www.|https://|http://|www)[^\" >]*)", " $1 ");
         StringBuilder sb = new StringBuilder();
         for (String s : string.split("\\s+")) {
@@ -243,7 +229,7 @@ public class ArabicUtils {
             } else if (s.startsWith("http") || s.startsWith("#") || s.startsWith("@") || s.matches("EMOTICON_[A-Z]+")) {
                 sb.append(s).append(" ");
             } else {
-                Matcher m = emailPattern.matcher(s);
+                Matcher m = EMAIL_PATTERN.matcher(s);
                 if (m.find()) {
                     sb.append(m.group().toLowerCase()).append(" ");
                     _normalPatternFlow(sb, s.replace(m.group(), "").trim(), reductRepetitions);
@@ -257,21 +243,21 @@ public class ArabicUtils {
     }
 
     private static void _normalPatternFlow(StringBuilder sb, String s, boolean reductRepetitions) {
-        Matcher lettersDigitsSymbolsMatcher = lettersDigitsSymbolsPattern.matcher(s);
+        Matcher lettersDigitsSymbolsMatcher = LETTERS_DIGITS_SYMBOLS_PATTERN.matcher(s);
         while (lettersDigitsSymbolsMatcher.find()) {
             String match = lettersDigitsSymbolsMatcher.group(1);
             if (!match.isEmpty()) {
                 if (match.startsWith("@")
                         || match.startsWith("#")
-                        || match.matches("-?[" + AllHindiDigits + "0-9]+" + "([,.]" + "[" + AllHindiDigits + "0-9]+)?")) {
+                        || match.matches("-?[" + ALL_HINDI_DIGITS + "0-9]+" + "([,.]" + "[" + ALL_HINDI_DIGITS + "0-9]+)?")) {
                     sb.append(match).append(" ");
                 } else {
-                    Matcher lettersDigitsMatcher = lettersDigitsPattern.matcher(match);
+                    Matcher lettersDigitsMatcher = LETTERS_DIGITS_PATTERN.matcher(match);
                     while (lettersDigitsMatcher.find()) {
                         for (int i : new int[]{1, 2}) {
                             String token = lettersDigitsMatcher.group(i);
                             if (!token.isEmpty()) {
-                                if (reductRepetitions && i == 1 && token.matches("[" + AllArabicLetters + "]+")) {
+                                if (reductRepetitions && i == 1 && token.matches("[" + ALL_ARABIC_LETTERS + "]+")) {
                                     token = token.replaceAll("(.+?)\\1{2,}", "$1");
                                 }
                                 sb.append(token).append(" ");
@@ -365,7 +351,7 @@ public class ArabicUtils {
     }
 
     public static String removeDiacritics(String s) {
-        return s.replaceAll("[" + TATWEEL + AllArabicDiacretics + SUPERSCRIPT_ALEF + "]+", "");
+        return s.replaceAll("[" + TATWEEL + ALL_ARABIC_DIACRETICS + SUPERSCRIPT_ALEF + "]+", "");
     }
 
     public static String removeNonCharacters(String s) {

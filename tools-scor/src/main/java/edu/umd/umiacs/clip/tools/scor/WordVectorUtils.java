@@ -31,7 +31,7 @@ import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectorsImpl;
 import org.deeplearning4j.models.word2vec.VocabWord;
 import org.deeplearning4j.models.word2vec.wordstore.VocabCache;
-import org.deeplearning4j.models.word2vec.wordstore.inmemory.AbstractCache;
+import org.deeplearning4j.models.word2vec.wordstore.inmemory.InMemoryLookupCache;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
@@ -48,7 +48,7 @@ public class WordVectorUtils {
     * @author raver119
      */
     public static WordVectors loadTxt(File vectorsFile) throws IOException {
-        VocabCache cache = new AbstractCache();
+        VocabCache cache = new InMemoryLookupCache();
         List<INDArray> arrays = lines(vectorsFile.toPath()).
                 map(line -> line.split(" ")).
                 filter(fields -> fields.length > 2).
@@ -58,7 +58,7 @@ public class WordVectorUtils {
                     word1.setIndex(cache.numWords());
                     cache.addToken(word1);
                     cache.addWordToIndex(cache.numWords(), word);
-                    //cache.putVocabWord(word);
+                    cache.putVocabWord(word);
                     INDArray row = Nd4j.create(Nd4j.createBuffer(split.length - 1));
                     for (int i = 1; i < split.length; i++) {
                         row.putScalar(i - 1, Float.parseFloat(split[i]));
@@ -74,7 +74,7 @@ public class WordVectorUtils {
         InMemoryLookupTable lookupTable = (InMemoryLookupTable) new InMemoryLookupTable.Builder()
                 .vectorLength(arrays.get(0).columns())
                 .useAdaGrad(false).cache(cache)
-                .useHierarchicSoftmax(false)
+                //.useHierarchicSoftmax(false)
                 .build();
         Nd4j.clearNans(syn);
         lookupTable.setSyn0(syn);
