@@ -19,6 +19,9 @@ import gnu.trove.map.TObjectIntMap;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Map;
+import java.util.Map.Entry;
+import static java.util.stream.Collectors.toMap;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.index.IndexReader;
 
 /**
@@ -70,13 +73,21 @@ public class BM25Scorer extends TFIDF {
     }
 
     @Override
+    public Object getProcessedQuery(String query) {
+        return tf(query).
+                entrySet().stream().
+                collect(toMap(Entry::getKey,
+                        entry -> Pair.of(entry.getValue(), idf(df(entry.getKey())))));
+    }
+
+    @Override
     public float scoreProcessed(Object query, Object text) {
         Map<String, Integer> docTerms = (Map<String, Integer>) text;
         int length = docTerms.values().stream().mapToInt(f -> f).sum();
-        return (float) ((Map<String, Integer>) query).entrySet().stream().
+        return (float) ((Map<String, Pair<Integer, Float>>) query).entrySet().stream().
                 filter(entry -> docTerms.containsKey(entry.getKey())).
-                mapToDouble(pair -> pair.getValue()
-                        * bm25(docTerms.get(pair.getKey()), df(pair.getKey()), length)).
+                mapToDouble(pair -> pair.getValue().getLeft()
+                * bm25(docTerms.get(pair.getKey()), pair.getValue().getRight(), length)).
                 sum();
     }
 
@@ -84,13 +95,13 @@ public class BM25Scorer extends TFIDF {
         return (float) Math.log1p((N - df + 0.5) / (df + 0.5));
     }
 
-    protected float bm25(float tf, float df, int length) {
+    protected float bm25(float tf, float idf, int length) {
         float denom;
         if (length >= cache.length) {
             denom = tf + k1 * (1 - b + b * (length / avgdl));
         } else {
             denom = tf + cache[length];
         }
-        return idf(df) * tf * (k1 + 1) / denom;
+        return idf * tf * (k1 + 1) / denom;
     }
 }
