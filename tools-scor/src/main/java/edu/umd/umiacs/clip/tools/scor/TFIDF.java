@@ -90,11 +90,7 @@ public class TFIDF extends Scorer {
             TermsEnum iter = ir.getTermVector(docid, field).iterator();
             BytesRef element;
             while ((element = iter.next()) != null) {
-                PostingsEnum postings = MultiFields.getTermDocsEnum(ir, field, element, PostingsEnum.FREQS);
-                int doc;
-                while ((doc = postings.nextDoc()) != docid) {
-                }
-                map.put(element.utf8ToString(), postings.freq());
+                map.put(element.utf8ToString(), (int) iter.totalTermFreq());
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
