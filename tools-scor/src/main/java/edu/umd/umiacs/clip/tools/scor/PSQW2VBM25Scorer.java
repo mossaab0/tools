@@ -50,39 +50,39 @@ public class PSQW2VBM25Scorer extends W2VBM25Scorer {
     }
 
     @Override
-    public List<Map<String, Double>> getProcessedQuery(String query) {
+    public List<Map<String, Float>> getProcessedQuery(String query) {
         return Stream.of(query.split(" ")).
                 filter(word -> !word.isEmpty()).distinct().
                 map(this::getWeightedTerm).collect(toList());
     }
 
-    private Map<String, Double> getWeightedTerm(String term) {
-        Map<String, Double> map = new HashMap<>();
+    private Map<String, Float> getWeightedTerm(String term) {
+        Map<String, Float> map = new HashMap<>();
         int df = df(term);
-        map.put(term, 1d);
+        map.put(term, 1f);
         if (df > 1) {
             Collection<String> words = getWord2Vec().wordsNearest(term, nearestTerms);
-            words.forEach(word -> map.put(word, getWord2Vec().similarity(term, word)));
-            double sum = map.values().parallelStream().mapToDouble(d -> d).sum();
+            words.forEach(word -> map.put(word, (float) getWord2Vec().similarity(term, word)));
+            float sum = (float) map.values().parallelStream().mapToDouble(d -> d).sum();
             map.keySet().forEach(key -> map.put(key, map.get(key) / sum));
         }
         return map;
     }
 
     @Override
-    public double scoreProcessed(Object query, Object text) {
-        return scoreWeighted((List<Map<String, Double>>) query, (Map<String, Integer>) text);
+    public float scoreProcessed(Object query, Object text) {
+        return scoreWeighted((List<Map<String, Float>>) query, (Map<String, Integer>) text);
     }
 
-    private double scoreWeighted(List<Map<String, Double>> wightedQuery, Map<String, Integer> docTerms) {
+    private float scoreWeighted(List<Map<String, Float>> wightedQuery, Map<String, Integer> docTerms) {
         int length = docTerms.values().parallelStream().mapToInt(f -> f).sum();
-        return wightedQuery.parallelStream().mapToDouble(weightedTerm -> {
-            List<Triple<Double, Double, Double>> list = weightedTerm.entrySet().stream().
+        return (float) wightedQuery.parallelStream().mapToDouble(weightedTerm -> {
+            List<Triple<Float, Float, Float>> list = weightedTerm.entrySet().stream().
                     filter(entry -> docTerms.containsKey(entry.getKey())).
-                    map(entry -> ImmutableTriple.of(docTerms.get(entry.getKey()).doubleValue(), (double) df(entry.getKey()), entry.getValue())).
+                    map(entry -> ImmutableTriple.of(docTerms.get(entry.getKey()).floatValue(), (float) df(entry.getKey()), entry.getValue())).
                     collect(toList());
-            double averageTF = list.parallelStream().mapToDouble(triple -> triple.getLeft() * triple.getRight()).sum();
-            double averageDF = list.parallelStream().mapToDouble(triple -> triple.getMiddle() * triple.getRight()).sum();
+            float averageTF = (float) list.parallelStream().mapToDouble(triple -> triple.getLeft() * triple.getRight()).sum();
+            float averageDF = (float) list.parallelStream().mapToDouble(triple -> triple.getMiddle() * triple.getRight()).sum();
             return bm25(averageTF, averageDF, length);
         }).sum();
     }

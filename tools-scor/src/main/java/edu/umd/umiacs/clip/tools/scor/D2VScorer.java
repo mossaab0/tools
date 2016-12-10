@@ -75,10 +75,15 @@ public class D2VScorer extends Scorer {
     }
 
     @Override
-    public double scoreProcessed(Object query, Object text) {
-        double val = Nd4j.getExecutioner().
+    public float scoreProcessed(Object query, Object text) {
+        float val = Nd4j.getExecutioner().
                 execAndReturn(new CosineSimilarity((INDArray) query, (INDArray) text)).
-                getFinalResult().doubleValue();
-        return Double.isFinite(val) ? val : 0;
+                getFinalResult().floatValue();
+        return Float.isFinite(val) ? val : 0;
+    }
+
+    @Override
+    public Object getProcessedText(int docid) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

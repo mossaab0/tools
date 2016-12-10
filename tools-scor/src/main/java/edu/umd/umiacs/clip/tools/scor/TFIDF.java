@@ -18,8 +18,11 @@ package edu.umd.umiacs.clip.tools.scor;
 import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import static java.lang.Integer.min;
 import static java.lang.Math.sqrt;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import static java.util.function.Function.identity;
@@ -27,6 +30,12 @@ import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import java.util.stream.Stream;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiFields;
+import org.apache.lucene.index.PostingsEnum;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermsEnum;
+import org.apache.lucene.util.BytesRef;
 
 /**
  *
@@ -34,8 +43,10 @@ import java.util.stream.Stream;
  */
 public class TFIDF extends Scorer {
 
-    private final transient TObjectIntMap<String> DF;
+    private transient TObjectIntMap<String> DF;
     protected final int N;
+    private IndexReader ir;
+    private String field;
 
     public TFIDF(String dfPath) {
         DF = new TObjectIntHashMap<>();
@@ -46,6 +57,12 @@ public class TFIDF extends Scorer {
             int df = new Integer(pair[1]);
             DF.put(pair[0], df);
         }
+    }
+
+    public TFIDF(IndexReader ir, String field) {
+        this.ir = ir;
+        this.field = field;
+        N = ir.numDocs();
     }
 
     public TFIDF(TObjectIntMap<String> DF, int N) {
@@ -67,44 +84,75 @@ public class TFIDF extends Scorer {
                 collect(groupingBy(identity(), reducing(0, e -> 1, Integer::sum)));
     }
 
-    private Map<String, Double> tfidf(String doc) {
-        return tf(doc).entrySet().stream().
+    public Map<String, Integer> tf(int docid) {
+        Map<String, Integer> map = new HashMap<>();
+        try {
+            TermsEnum iter = ir.getTermVector(docid, field).iterator();
+            BytesRef element;
+            while ((element = iter.next()) != null) {
+                PostingsEnum postings = MultiFields.getTermDocsEnum(ir, field, element, PostingsEnum.FREQS);
+                int doc;
+                while ((doc = postings.nextDoc()) != docid) {
+                }
+                map.put(element.utf8ToString(), postings.freq());
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return map;
+    }
+
+    private Map<String, Float> tfidf(Object doc) {
+        return ((doc instanceof Integer) ? tf((int) doc) : tf((String) doc)).
+                entrySet().stream().
                 collect(toMap(entry -> entry.getKey(),
                         entry -> entry.getValue() * idf(df(entry.getKey()))));
     }
 
-    private double dot(Map<String, Double> v1, Map<String, Double> v2) {
-        return v1.keySet().parallelStream().filter(v2::containsKey).
+    private float dot(Map<String, Float> v1, Map<String, Float> v2) {
+        return (float) v1.keySet().parallelStream().filter(v2::containsKey).
                 mapToDouble(word -> v1.get(word) * v2.get(word)).sum();
     }
 
-    private double norm(Map<String, Double> vec) {
+    private float norm(Map<String, Float> vec) {
         return vec.isEmpty() ? 1
-                : sqrt(vec.values().parallelStream().mapToDouble(v -> v * v).sum());
+                : (float) sqrt(vec.values().parallelStream().mapToDouble(v -> v * v).sum());
     }
 
     public int df(String word) {
+        if (DF == null) {
+            try {
+                return ir.docFreq(new Term(field, word));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
         return DF.containsKey(word) ? min(N, DF.get(word)) : 1;
     }
 
-    private double idf(double df) {
-        return Math.log(N / df);
+    private float idf(float df) {
+        return (float) Math.log(N / df);
     }
 
     @Override
-    public double scoreProcessed(Object query, Object text) {
-        Map<String, Double> queryVec = (Map<String, Double>) query;
-        Map<String, Double> textVec = (Map<String, Double>) text;
+    public float scoreProcessed(Object query, Object text) {
+        Map<String, Float> queryVec = (Map<String, Float>) query;
+        Map<String, Float> textVec = (Map<String, Float>) text;
         return dot(queryVec, textVec) / (norm(queryVec) * norm(textVec));
     }
 
     @Override
     public Object getProcessedQuery(String query) {
-        return tfidf(query);
+        return tf(query);
     }
 
     @Override
     public Object getProcessedText(String text) {
         return tfidf(text);
+    }
+
+    @Override
+    public Object getProcessedText(int docid) {
+        return tfidf(docid);
     }
 }

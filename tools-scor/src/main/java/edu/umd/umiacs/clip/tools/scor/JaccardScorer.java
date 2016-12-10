@@ -37,9 +37,9 @@ public class JaccardScorer extends Scorer implements Serializable {
     }
 
     @Override
-    public double scoreProcessed(Object query, Object text) {
+    public float scoreProcessed(Object query, Object text) {
         int denom = denom((Set<String>) query, (Set<String>) text);
-        return denom == 0 ? 0 : intersect((Set<String>)query, (Set<String>)text) / (double) denom;
+        return denom == 0 ? 0 : intersect((Set<String>)query, (Set<String>)text) / (float) denom;
     }
 
     private int intersect(Set<String> a, Set<String> b) {
@@ -48,5 +48,10 @@ public class JaccardScorer extends Scorer implements Serializable {
 
     public int denom(Set<String> a, Set<String> b) {
         return (int) Stream.concat(a.stream(), b.stream()).distinct().count();
+    }
+
+    @Override
+    public Object getProcessedText(int docid) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

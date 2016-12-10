@@ -32,6 +32,11 @@
             <artifactId>nd4j-jblas</artifactId>
             <version>0.4-rc3.6</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>6.3.0</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/org.deeplearning4j/deeplearning4j-parent -->
         <dependency>
             <groupId>org.deeplearning4j</groupId>
