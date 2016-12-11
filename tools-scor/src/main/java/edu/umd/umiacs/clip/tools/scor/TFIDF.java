@@ -31,8 +31,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 import java.util.stream.Stream;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.MultiFields;
-import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.BytesRef;
@@ -150,5 +148,9 @@ public class TFIDF extends Scorer {
     @Override
     public Object getProcessedText(int docid) {
         return tfidf(docid);
+    }
+    
+    public String getField(){
+        return field;
     }
 }

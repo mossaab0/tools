@@ -91,7 +91,7 @@ public class BM25Scorer extends TFIDF {
                 sum();
     }
 
-    private float idf(float df) {
+    protected final float idf(float df) {
         return (float) Math.log1p((N - df + 0.5) / (df + 0.5));
     }
 
