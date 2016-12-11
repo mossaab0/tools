@@ -32,6 +32,7 @@ import static java.util.stream.Collectors.toMap;
 import java.util.stream.Stream;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.BytesRef;
 
@@ -85,10 +86,13 @@ public class TFIDF extends Scorer {
     public Map<String, Integer> tf(int docid) {
         Map<String, Integer> map = new HashMap<>();
         try {
-            TermsEnum iter = ir.getTermVector(docid, field).iterator();
-            BytesRef element;
-            while ((element = iter.next()) != null) {
-                map.put(element.utf8ToString(), (int) iter.totalTermFreq());
+            Terms terms = ir.getTermVector(docid, field);
+            if (terms != null) {
+                TermsEnum iter = terms.iterator();
+                BytesRef element;
+                while ((element = iter.next()) != null) {
+                    map.put(element.utf8ToString(), (int) iter.totalTermFreq());
+                }
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -149,8 +153,8 @@ public class TFIDF extends Scorer {
     public Object getProcessedText(int docid) {
         return tfidf(docid);
     }
-    
-    public String getField(){
+
+    public String getField() {
         return field;
     }
 }
