@@ -18,11 +18,13 @@ package edu.umd.umiacs.clip.tools.lang;
 import java.io.IOException;
 import java.io.StringReader;
 import org.apache.lucene.analysis.Analyzer;
+import static org.apache.lucene.analysis.CharArraySet.EMPTY_SET;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.ar.ArabicAnalyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.en.KStemFilter;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -34,6 +36,8 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 public class LuceneUtils {
 
     private static final EnglishAnalyzer EN = new EnglishAnalyzer();
+    private static final StandardAnalyzer NO_STOP_WORDS = new StandardAnalyzer(EMPTY_SET);
+    private static final StandardAnalyzer STANDARD_ANALYZER = new StandardAnalyzer();
     private static final ArabicAnalyzer AR = new ArabicAnalyzer();
     private static final Analyzer KROVETZ = new Analyzer() {
         @Override
@@ -51,6 +55,14 @@ public class LuceneUtils {
 
     public static String enStem(String s) {
         return stem(EN, s);
+    }
+
+    public static String tokenizeUnstopped(String s) {
+        return stem(NO_STOP_WORDS, s);
+    }
+
+    public static String tokenizeStopped(String s) {
+        return stem(STANDARD_ANALYZER, s);
     }
 
     public static String krovetzStem(String s) {

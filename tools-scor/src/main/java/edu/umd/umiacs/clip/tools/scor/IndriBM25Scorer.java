@@ -67,7 +67,6 @@ public class IndriBM25Scorer extends BM25Scorer {
     public float scoreProcessed(Object query, Object text) {
         Map<String, Integer> docTerms = (Map<String, Integer>) text;
         int length = docTerms.values().stream().mapToInt(f -> f).sum();
-
         return (float) ((List<Pair<List<Pair<String, Float>>, Float>>) query).parallelStream().
                 mapToDouble(p -> bm25((float) p.getLeft().parallelStream().
                         mapToDouble(pair -> pair.getRight() * docTerms.getOrDefault(pair.getLeft(), 0)).
