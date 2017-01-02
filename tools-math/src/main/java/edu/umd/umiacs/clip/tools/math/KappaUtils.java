@@ -22,7 +22,7 @@ import static java.util.stream.IntStream.range;
  *
  * @author Mossaab Bagdouri
  */
-public class Kappa {
+public class KappaUtils {
 
     //Adapted from http://janajarecki.com/?p=569
     //Reference: http://conservancy.umn.edu/bitstream/handle/11299/99941/1/v03n4p537.pdf

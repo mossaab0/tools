@@ -29,7 +29,7 @@ public class KappaTest {
         int[] judges = {2, 2, 3, 4, 3, 4, 2, 4, 3, 3, 3, 5, 2, 4, 3};
         int[] pos = {2, 0, 2, 3, 1, 1, 2, 4, 0, 3, 2, 4, 2, 3, 3};
         double expResult = 0.274;
-        double result = Kappa.dichotomeousFleissCuzick(judges, pos);
+        double result = KappaUtils.dichotomeousFleissCuzick(judges, pos);
         assertEquals(expResult, result, 0.001);
     }
 }
