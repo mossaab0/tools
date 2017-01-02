@@ -24,7 +24,6 @@ import static java.util.stream.IntStream.range;
  */
 public class KappaUtils {
 
-    //Adapted from http://janajarecki.com/?p=569
     //Reference: http://conservancy.umn.edu/bitstream/handle/11299/99941/1/v03n4p537.pdf
     //TODO: Generalize to multiple categories: http://www2.sas.com/proceedings/sugi22/POSTERS/PAPER241.PDF
     public static double dichotomeousFleissCuzick(int[] judges, int[] pos) {
