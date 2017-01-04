@@ -42,8 +42,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 
 /**
  *
@@ -155,6 +158,33 @@ public class AllFiles {
         return br.lines().onClose(asUncheckedRunnable(br));
     }
 
+    public static Stream<CSVRecord> records(CSVFormat format, Path path) {
+        try {
+            String p = path.toString();
+            if (!p.contains("*")) {
+                return p.endsWith(".gz") ? GZIPFiles.records(format, path)
+                        : p.endsWith(".bz2") ? BZIP2Files.records(format, path)
+                        : overridenRecords(format, path);
+            } else {
+                File file = path.toFile();
+                return Stream.of(file.getParentFile()
+                        .listFiles((dir, name) -> name.matches(file.getName().replace(".", "\\.").replace("*", ".+"))))
+                        .sorted()
+                        .flatMap(f -> records(format, f));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public static Stream<CSVRecord> records(CSVFormat format, File file) {
+        return records(format, file.toPath());
+    }
+
+    public static Stream<CSVRecord> records(CSVFormat format, String path) {
+        return records(format, new File(path));
+    }
+
     public static Stream<String> lines(Path path) {
         try {
             String p = path.toString();
@@ -190,6 +220,10 @@ public class AllFiles {
             }
             throw e;
         }
+    }
+
+    private static Stream<CSVRecord> overridenRecords(CSVFormat format, Path path) throws IOException {
+        return StreamSupport.stream(format.parse(new BufferedReader(new InputStreamReader(new BufferedInputStream(newInputStream(path), BUFFER_SIZE), UTF_8.newDecoder().onMalformedInput(IGNORE)))).spliterator(), false);
     }
 
     public static Stream<String> lines(File file) {

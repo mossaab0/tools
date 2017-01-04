@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.umd.umiacs.clip.tools.io;
 
 import static edu.umd.umiacs.clip.tools.io.AllFiles.BUFFER_SIZE;
@@ -26,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import static java.nio.charset.CodingErrorAction.IGNORE;
@@ -38,8 +38,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 
 /**
  *
@@ -76,6 +79,18 @@ public class GZIPFiles {
         }
     }
 
+    protected static Stream<CSVRecord> records(CSVFormat format, Path path) throws IOException {
+        return StreamSupport.stream(format.parse(new BufferedReader(new InputStreamReader(new GZIPInputStream(new BufferedInputStream(newInputStream(path), BUFFER_SIZE)), UTF_8.newDecoder().onMalformedInput(IGNORE)))).spliterator(), false);
+    }
+
+    protected static Stream<CSVRecord> records(CSVFormat format, File file) throws IOException {
+        return records(format, file.toPath());
+    }
+
+    protected static Stream<CSVRecord> records(CSVFormat format, String path) throws IOException {
+        return records(format, new File(path));
+    }
+
     protected static Stream<String> lines(File file) throws IOException {
         return lines(file.toPath());
     }
@@ -92,7 +107,6 @@ public class GZIPFiles {
             Charset cs, OpenOption... options)
             throws IOException {
         Objects.requireNonNull(lines);
-        CharsetEncoder encoder = cs.newEncoder();
         OutputStream out = newOutputStream(path, options);
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(out), UTF_8.newEncoder().onMalformedInput(IGNORE)), BUFFER_SIZE)) {
             for (CharSequence line : lines) {

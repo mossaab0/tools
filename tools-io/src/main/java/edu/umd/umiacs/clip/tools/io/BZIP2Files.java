@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.umd.umiacs.clip.tools.io;
 
 import static edu.umd.umiacs.clip.tools.io.AllFiles.BUFFER_SIZE;
@@ -38,8 +37,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+import java.util.zip.GZIPInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 
 /**
  *
@@ -82,6 +85,18 @@ public class BZIP2Files {
 
     protected static Stream<String> lines(String path) throws IOException {
         return lines(new File(path));
+    }
+
+    protected static Stream<CSVRecord> records(CSVFormat format, Path path) throws IOException {
+        return StreamSupport.stream(format.parse(new BufferedReader(new InputStreamReader(new BZip2CompressorInputStream(new BufferedInputStream(newInputStream(path), BUFFER_SIZE)), UTF_8.newDecoder().onMalformedInput(IGNORE)))).spliterator(), false);
+    }
+
+    protected static Stream<CSVRecord> records(CSVFormat format, File file) throws IOException {
+        return records(format, file.toPath());
+    }
+
+    protected static Stream<CSVRecord> records(CSVFormat format, String path) throws IOException {
+        return records(format, new File(path));
     }
 
     protected static Path write(Path path, Iterable<? extends CharSequence> lines, OpenOption... options) throws IOException {
