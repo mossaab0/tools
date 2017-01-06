@@ -26,11 +26,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.Pair;
@@ -189,5 +190,21 @@ public class LibSVMUtils {
     public static Pair<List<String>, List<String>> scale(Pair<List<String>, List<String>> pair) {
         Map<Integer, Pair<Float, Float>> model = learnScalingModel(pair.getLeft());
         return Pair.of(applyScalingModel(model, pair.getLeft()), applyScalingModel(model, pair.getRight()));
+    }
+
+    public static List<String> filter(List<String> training, int threshold) {
+        Set<Integer> filtered = training.stream().
+                flatMap(line -> Stream.of(line.split(" ")).skip(1)).
+                map(pair -> new Integer(pair.substring(0, pair.indexOf(":")))).
+                collect(groupingBy(i -> i, counting())).
+                entrySet().stream().filter(entry -> entry.getValue() >= threshold).
+                map(Entry::getKey).collect(toSet());
+        return training.stream().map(line -> line.split(" ")).
+                map(fields -> fields[0] + " " + String.join(" ",
+                        Stream.of(fields).skip(1).
+                        filter(pair -> filtered.contains(new Integer(pair.substring(0, pair.indexOf(":"))))).
+                        collect(toList()))).
+                map(String::trim).
+                collect(toList());
     }
 }
