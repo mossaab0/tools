@@ -15,6 +15,8 @@
  */
 package edu.umd.umiacs.clip.tools.classifier;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import java.util.ArrayList;
 import static java.util.Arrays.asList;
 import java.util.Collection;
@@ -23,6 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.IntStream.range;
@@ -52,7 +58,7 @@ public class LibSVMUtils {
     }
 
     public static Map<Integer, Double> asMap(String features) {
-        if(features.isEmpty()){
+        if (features.isEmpty()) {
             return new HashMap<>();
         }
         return Stream.of(features.trim().split("\\s+")).
@@ -146,5 +152,42 @@ public class LibSVMUtils {
 
     public static List<Pair<String, String>> split(List<String> lines) {
         return range(0, lines.size()).boxed().map(i -> split(lines.get(i))).collect(toList());
+    }
+
+    public static Map<Integer, Pair<Float, Float>> learnScalingModel(List<String> training) {
+        return training.stream().flatMap(line -> Stream.of(line.split(" ")).skip(1)).
+                map(pair -> pair.split(":")).
+                map(pair -> Pair.of(new Integer(pair[0]), new Float(pair[1]))).
+                collect(groupingBy(Pair::getKey, ConcurrentHashMap::new,
+                        reducing(Pair.of(0f, 0f),
+                                pair -> Pair.of(pair.getRight(), pair.getRight()),
+                                (p1, p2) -> Pair.of(min(p1.getLeft(), p2.getLeft()),
+                                        max(p1.getRight(), p2.getRight()))))).
+                entrySet().stream().
+                filter(entry -> entry.getValue().getLeft().floatValue() != entry.getValue().getRight().floatValue()).
+                collect(toMap(Entry::getKey,
+                        entry -> Pair.of(entry.getValue().getLeft(),
+                                entry.getValue().getRight() - entry.getValue().getLeft())));
+    }
+
+    public static List<String> applyScalingModel(Map<Integer, Pair<Float, Float>> model, List<String> examples) {
+        return examples.stream().map(line -> line.split(" ")).
+                map(fields -> fields[0] + (fields.length == 1 ? ""
+                        : (" " + String.join(" ", Stream.of(fields).skip(1).
+                                map(pair -> pair.split(":")).
+                                map(pair -> Pair.of(new Integer(pair[0]), new Float(pair[1]))).
+                                map(pair -> Pair.of(pair.getLeft(),
+                                        !model.containsKey(pair.getLeft()) ? 1f
+                                        : ((pair.getRight() - model.get(pair.getLeft()).getLeft())
+                                        / model.get(pair.getLeft()).getRight()))).
+                                //map(pair -> Pair.of(pair.getKey(), 2 * pair.getRight() - 1)).
+                                filter(pair -> pair.getValue() != 0f).
+                                map(pair -> pair.getLeft() + ":" + pair.getRight()).collect(toList()))))).
+                collect(toList());
+    }
+
+    public static Pair<List<String>, List<String>> scale(Pair<List<String>, List<String>> pair) {
+        Map<Integer, Pair<Float, Float>> model = learnScalingModel(pair.getLeft());
+        return Pair.of(applyScalingModel(model, pair.getLeft()), applyScalingModel(model, pair.getRight()));
     }
 }
