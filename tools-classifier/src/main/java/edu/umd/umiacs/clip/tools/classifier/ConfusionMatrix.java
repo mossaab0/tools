@@ -34,13 +34,13 @@ public class ConfusionMatrix {
     public float getF1() {
         return 2f * TP / (2f * TP + FN + FP);
     }
-    
+
     public static ConfusionMatrix loadLibSVM(String goldPath, String predPath, double... cutoffs) {
         int[] gold = readAllLines(goldPath).stream().
                 mapToInt(line -> new Integer(line.split("\\s+")[0]))
                 .toArray();
         IntSummaryStatistics stats = Arrays.stream(gold).summaryStatistics();
-        double cutoff = stats.getMin() == stats.getMax() ? cutoffs[0] : ((stats.getMax() - stats.getMin()) / 2);
+        double cutoff = stats.getMin() == stats.getMax() ? cutoffs[0] : ((stats.getMax() + stats.getMin()) / 2);
         List<Boolean> goldList = Arrays.stream(gold).boxed().map(i -> i > cutoff).collect(toList());
         List<Boolean> predList = readAllLines(predPath).stream().map(pred -> new Double(pred) > cutoff).collect(toList());
         ConfusionMatrix cm = new ConfusionMatrix();
@@ -50,5 +50,10 @@ public class ConfusionMatrix {
         cm.FN = (int) range(0, total).filter(i -> goldList.get(i) && !predList.get(i)).count();
         cm.TN = total - (cm.TP + cm.FP + cm.FN);
         return cm;
+    }
+
+    @Override
+    public String toString() {
+        return "TP = " + TP + "\tTN = " + TN + "\tFP = " + FP + "\tFN = " + FN;
     }
 }
