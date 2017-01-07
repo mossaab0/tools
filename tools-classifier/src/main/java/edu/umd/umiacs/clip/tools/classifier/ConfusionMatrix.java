@@ -22,6 +22,7 @@ import java.util.IntSummaryStatistics;
 import java.util.List;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
+import org.apache.commons.lang3.tuple.Triple;
 
 /**
  *
@@ -53,7 +54,7 @@ public class ConfusionMatrix {
         return cm;
     }
 
-    public double[] getF1CI() {
+    public Triple<Float, Float, Float> getF1withCI() {
         double n[] = new double[]{FN + TN, TP + FP};
         double r[] = new double[]{FN, TP};
         double N[] = range(0, 2).mapToDouble(i -> n[i] * N_total / (n[0] + n[1])).toArray();
@@ -65,9 +66,9 @@ public class ConfusionMatrix {
         double Var_F1_1 = Math.pow(2 / (R[1] + R[0] + N[1]) - temp, 2);
         double Var_F1_0 = Math.pow(temp, 2);
         double Var_F1 = Var_F1_1 * Var_R[1] + Var_F1_0 * Var_R[0];
-        double pe = getF1();
-        double delta = 1.96 * Math.sqrt(Var_F1);
-        return new double[]{pe - delta, pe + delta};
+        float pe = getF1();
+        float delta = (float) (1.96 * Math.sqrt(Var_F1));
+        return Triple.of(pe - delta, pe, pe + delta);
     }
 
     @Override
