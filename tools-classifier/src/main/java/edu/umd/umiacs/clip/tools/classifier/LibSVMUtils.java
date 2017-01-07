@@ -15,12 +15,15 @@
  */
 package edu.umd.umiacs.clip.tools.classifier;
 
+import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import java.util.ArrayList;
+import java.util.Arrays;
 import static java.util.Arrays.asList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -174,16 +177,16 @@ public class LibSVMUtils {
     public static List<String> applyScalingModel(Map<Integer, Pair<Float, Float>> model, List<String> examples) {
         return examples.stream().map(line -> line.split(" ")).
                 map(fields -> fields[0] + (fields.length == 1 ? ""
-                        : (" " + String.join(" ", Stream.of(fields).skip(1).
-                                map(pair -> pair.split(":")).
-                                map(pair -> Pair.of(new Integer(pair[0]), new Float(pair[1]))).
-                                map(pair -> Pair.of(pair.getLeft(),
-                                        !model.containsKey(pair.getLeft()) ? 1f
-                                        : ((pair.getRight() - model.get(pair.getLeft()).getLeft())
-                                        / model.get(pair.getLeft()).getRight()))).
-                                //map(pair -> Pair.of(pair.getKey(), 2 * pair.getRight() - 1)).
-                                filter(pair -> pair.getValue() != 0f).
-                                map(pair -> pair.getLeft() + ":" + pair.getRight()).collect(toList()))))).
+                : (" " + String.join(" ", Stream.of(fields).skip(1).
+                        map(pair -> pair.split(":")).
+                        map(pair -> Pair.of(new Integer(pair[0]), new Float(pair[1]))).
+                        map(pair -> Pair.of(pair.getLeft(),
+                        !model.containsKey(pair.getLeft()) ? 1f
+                        : ((pair.getRight() - model.get(pair.getLeft()).getLeft())
+                        / model.get(pair.getLeft()).getRight()))).
+                        //map(pair -> Pair.of(pair.getKey(), 2 * pair.getRight() - 1)).
+                        filter(pair -> pair.getValue() != 0f).
+                        map(pair -> pair.getLeft() + ":" + pair.getRight()).collect(toList()))))).
                 collect(toList());
     }
 
@@ -201,7 +204,7 @@ public class LibSVMUtils {
                 map(Entry::getKey).collect(toSet());
         return training.stream().map(line -> line.split(" ")).
                 map(fields -> fields[0] + " " + String.join(" ",
-                        Stream.of(fields).skip(1).
+                Stream.of(fields).skip(1).
                         filter(pair -> filtered.contains(new Integer(pair.substring(0, pair.indexOf(":"))))).
                         collect(toList()))).
                 map(String::trim).
