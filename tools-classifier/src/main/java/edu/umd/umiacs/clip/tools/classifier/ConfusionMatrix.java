@@ -29,6 +29,7 @@ import static java.util.stream.IntStream.range;
  */
 public class ConfusionMatrix {
 
+    private static final double N_total = Integer.MAX_VALUE;
     public int TP, TN, FP, FN;
 
     public float getF1() {
@@ -50,6 +51,23 @@ public class ConfusionMatrix {
         cm.FN = (int) range(0, total).filter(i -> goldList.get(i) && !predList.get(i)).count();
         cm.TN = total - (cm.TP + cm.FP + cm.FN);
         return cm;
+    }
+
+    public double[] getF1CI() {
+        double n[] = new double[]{FN + TN, TP + FP};
+        double r[] = new double[]{FN, TP};
+        double N[] = range(0, 2).mapToDouble(i -> n[i] * N_total / (n[0] + n[1])).toArray();
+        double R[] = range(0, 2).mapToDouble(i -> r[i] * N_total / (n[0] + n[1])).toArray();
+        double Var_R[] = range(0, 2).
+                mapToDouble(i -> Math.pow(N[i], 2) * r[i] * (1 - r[i] / n[i])
+                / Math.pow(n[i], 2)).toArray();
+        double temp = 2 * R[1] / Math.pow(R[1] + R[0] + N[1], 2);
+        double Var_F1_1 = Math.pow(2 / (R[1] + R[0] + N[1]) - temp, 2);
+        double Var_F1_0 = Math.pow(temp, 2);
+        double Var_F1 = Var_F1_1 * Var_R[1] + Var_F1_0 * Var_R[0];
+        double pe = getF1();
+        double delta = 1.96 * Math.sqrt(Var_F1);
+        return new double[]{pe - delta, pe + delta};
     }
 
     @Override
