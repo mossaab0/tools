@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class OSTools {
 
-    private static final boolean DEBUG = false;
+    public static boolean DEBUG = false;
 
     public static List<Integer> getProcessIds(String st) {
         List<Integer> list = new ArrayList<>();
