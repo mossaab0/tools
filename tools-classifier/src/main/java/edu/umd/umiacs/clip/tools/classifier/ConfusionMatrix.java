@@ -30,7 +30,7 @@ import org.apache.commons.lang3.tuple.Triple;
  */
 public class ConfusionMatrix {
 
-    private static final double N_total = Integer.MAX_VALUE;
+    private static final double N_TOTAL = Integer.MAX_VALUE;
     public int TP, TN, FP, FN;
 
     public float getF1() {
@@ -57,8 +57,8 @@ public class ConfusionMatrix {
     public Triple<Float, Float, Float> getF1withCI() {
         double n[] = new double[]{FN + TN, TP + FP};
         double r[] = new double[]{FN, TP};
-        double N[] = range(0, 2).mapToDouble(i -> n[i] * N_total / (n[0] + n[1])).toArray();
-        double R[] = range(0, 2).mapToDouble(i -> r[i] * N_total / (n[0] + n[1])).toArray();
+        double N[] = range(0, 2).mapToDouble(i -> n[i] * N_TOTAL / (n[0] + n[1])).toArray();
+        double R[] = range(0, 2).mapToDouble(i -> r[i] * N_TOTAL / (n[0] + n[1])).toArray();
         double Var_R[] = range(0, 2).
                 mapToDouble(i -> Math.pow(N[i], 2) * r[i] * (1 - r[i] / n[i])
                 / Math.pow(n[i], 2)).toArray();
