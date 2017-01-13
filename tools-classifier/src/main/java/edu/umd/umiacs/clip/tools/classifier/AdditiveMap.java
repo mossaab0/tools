@@ -15,7 +15,15 @@
  */
 package edu.umd.umiacs.clip.tools.classifier;
 
+import edu.umd.umiacs.clip.tools.io.AllFiles;
+import static edu.umd.umiacs.clip.tools.io.AllFiles.lines;
+import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import static java.util.stream.Collectors.toMap;
 
 /**
  *
@@ -23,22 +31,47 @@ import java.util.HashMap;
  */
 public class AdditiveMap extends HashMap<String, Double> {
 
+    private final Set<String> vocab = new HashSet<>();
+
+    public AdditiveMap() {
+        super();
+    }
+
+    public AdditiveMap(Collection<String> vocab) {
+        super();
+        this.vocab.addAll(vocab);
+    }
+
+    public AdditiveMap(String vocabPath) {
+        this(readAllLines(vocabPath));
+    }
+
     public void add(String key, Object value) {
         add(key, value, 1);
     }
 
+    public void add(String key) {
+        add(key, 1);
+    }
+
     public void add(String key, Object value, double weight) {
-        double old = getOrDefault(value, 0d);
-        if (value instanceof Boolean) {
-            if (((Boolean) value) && old + weight != 0) {
-                put(key, old + weight);
-            }
-        } else {
-            put(key, old + weight * ((Number) value).doubleValue());
-            if (get(key) == 0) {
-                remove(key);
+        if (vocab.isEmpty() || vocab.contains(key)) {
+            double old = getOrDefault(value, 0d);
+            if (value instanceof Boolean) {
+                if (((Boolean) value) && old + weight != 0) {
+                    put(key, old + weight);
+                }
+            } else {
+                put(key, old + weight * ((Number) value).doubleValue());
+                if (get(key) == 0) {
+                    remove(key);
+                }
             }
         }
+    }
+
+    public Map<String, Float> asFloatMap() {
+        return entrySet().stream().collect(toMap(Entry::getKey, entry -> entry.getValue().floatValue()));
     }
 
 }
