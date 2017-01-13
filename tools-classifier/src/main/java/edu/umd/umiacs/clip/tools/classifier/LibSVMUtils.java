@@ -15,15 +15,12 @@
  */
 package edu.umd.umiacs.clip.tools.classifier;
 
-import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import java.util.ArrayList;
-import java.util.Arrays;
 import static java.util.Arrays.asList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
