@@ -28,6 +28,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.IntStream.range;
 import java.util.stream.Stream;
 
 /**
@@ -68,6 +69,23 @@ public class LangUtils {
         }
         sb.append(ngram(input, nEndIncluded, sep, includeBoudnaries));
         return sb.toString().trim();
+    }
+
+    public static List<String> charNgram(String input, int n, boolean includeBoudnaries) {
+        if (includeBoudnaries) {
+            for (int i = 0; i < n - 1; i++) {
+                input = "S" + input + "E";
+            }
+        }
+        String modified = input;
+        return range(0, modified.length() - n + 1).boxed().
+                map(i -> modified.substring(i, i + n)).collect(toList());
+    }
+
+    public static List<String> charNgrams(String input, int nStartIncluded, int nEndIncluded, boolean includeBoudnaries) {
+        return range(nStartIncluded, nEndIncluded + 1).boxed().
+                flatMap(n -> charNgram(input, n, includeBoudnaries).stream()).
+                collect(toList());
     }
 
     public static Map<String, Integer> toFreqMap(String input) {
@@ -125,6 +143,6 @@ public class LangUtils {
         //System.out.println(ngrams(input, 1, 3, "_", false));
         //System.out.println(toFreqMap(""));
         //System.out.println(tokenizeKeepPunctuation(input));
-        System.out.println(powerSet(input, "_"));
+        System.out.println(charNgrams("abc", 2, 3, true));
     }
 }
