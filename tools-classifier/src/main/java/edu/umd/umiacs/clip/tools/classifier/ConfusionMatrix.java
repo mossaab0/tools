@@ -33,8 +33,27 @@ public class ConfusionMatrix {
     private static final double N_TOTAL = Integer.MAX_VALUE;
     public int TP, TN, FP, FN;
 
+    public ConfusionMatrix() {
+    }
+
+    public ConfusionMatrix(List<Boolean> gold, List<Boolean> predictions) {
+        int total = max(gold.size(), predictions.size());
+        TP = (int) range(0, total).filter(i -> gold.get(i) && predictions.get(i)).count();
+        FP = (int) range(0, total).filter(i -> !gold.get(i) && predictions.get(i)).count();
+        FN = (int) range(0, total).filter(i -> gold.get(i) && !predictions.get(i)).count();
+        TN = total - (TP + FP + FN);
+    }
+
+    public float getRecall() {
+        return TP / (float) (TP + FN);
+    }
+
+    public float getPrecision() {
+        return TP / (float) (TP + FP);
+    }
+
     public float getF1() {
-        return 2f * TP / (2f * TP + FN + FP);
+        return 2 * TP / (2f * TP + FN + FP);
     }
 
     public static ConfusionMatrix loadLibSVM(String goldPath, String predPath, double... cutoffs) {
@@ -45,13 +64,7 @@ public class ConfusionMatrix {
         double cutoff = stats.getMin() == stats.getMax() ? cutoffs[0] : ((stats.getMax() + stats.getMin()) / 2);
         List<Boolean> goldList = Arrays.stream(gold).boxed().map(i -> i > cutoff).collect(toList());
         List<Boolean> predList = readAllLines(predPath).stream().map(pred -> new Double(pred) > cutoff).collect(toList());
-        ConfusionMatrix cm = new ConfusionMatrix();
-        int total = max(goldList.size(), predList.size());
-        cm.TP = (int) range(0, total).filter(i -> goldList.get(i) && predList.get(i)).count();
-        cm.FP = (int) range(0, total).filter(i -> !goldList.get(i) && predList.get(i)).count();
-        cm.FN = (int) range(0, total).filter(i -> goldList.get(i) && !predList.get(i)).count();
-        cm.TN = total - (cm.TP + cm.FP + cm.FN);
-        return cm;
+        return new ConfusionMatrix(goldList, predList);
     }
 
     public Triple<Float, Float, Float> getF1withCI() {
@@ -61,7 +74,7 @@ public class ConfusionMatrix {
         double R[] = range(0, 2).mapToDouble(i -> r[i] * N_TOTAL / (n[0] + n[1])).toArray();
         double Var_R[] = range(0, 2).
                 mapToDouble(i -> Math.pow(N[i], 2) * r[i] * (1 - r[i] / n[i])
-                / Math.pow(n[i], 2)).toArray();
+                        / Math.pow(n[i], 2)).toArray();
         double temp = 2 * R[1] / Math.pow(R[1] + R[0] + N[1], 2);
         double Var_F1_1 = Math.pow(2 / (R[1] + R[0] + N[1]) - temp, 2);
         double Var_F1_0 = Math.pow(temp, 2);
