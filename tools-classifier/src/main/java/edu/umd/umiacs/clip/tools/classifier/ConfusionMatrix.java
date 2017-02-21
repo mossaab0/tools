@@ -56,6 +56,10 @@ public class ConfusionMatrix {
         return 2 * TP / (2f * TP + FN + FP);
     }
 
+    public float getAccuracy() {
+        return (TP + TN) / (float) (TP + TN + FP + FN);
+    }
+
     public static ConfusionMatrix loadLibSVM(String goldPath, String predPath, double... cutoffs) {
         int[] gold = readAllLines(goldPath).stream().
                 mapToInt(line -> new Integer(line.split("\\s+")[0]))
