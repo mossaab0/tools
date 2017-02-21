@@ -15,14 +15,21 @@
  */
 package edu.umd.umiacs.clip.tools.classifier;
 
+import cern.jet.random.Beta;
+import cern.jet.random.engine.MersenneTwister64;
+import cern.jet.random.engine.RandomEngine;
 import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
 import static java.lang.Math.max;
 import java.util.Arrays;
 import java.util.IntSummaryStatistics;
 import java.util.List;
+import java.util.Random;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
+import java.util.stream.Stream;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 /**
  *
@@ -30,10 +37,24 @@ import org.apache.commons.lang3.tuple.Triple;
  */
 public class ConfusionMatrix {
 
+    private static final int DRAWS = 40000;
+    private static final double CONF_LEVEL = 0.95d;
+    private Beta beta_PF;
+    private Beta beta_retr;
+    private Beta beta_unretr;
+    private static RandomEngine re = new MersenneTwister64();
     private static final double N_TOTAL = Integer.MAX_VALUE;
-    public int TP, TN, FP, FN;
+    public double TP, TN, FP, FN;
+    private ConfusionMatrix[] sample;
 
     public ConfusionMatrix() {
+    }
+
+    public ConfusionMatrix(double TP, double TN, double FP, double FN) {
+        this.TP = TP;
+        this.TN = TN;
+        this.FP = FP;
+        this.FN = FN;
     }
 
     public ConfusionMatrix(List<Boolean> gold, List<Boolean> predictions) {
@@ -45,19 +66,19 @@ public class ConfusionMatrix {
     }
 
     public float getRecall() {
-        return TP / (float) (TP + FN);
+        return (float) (TP / (TP + FN));
     }
 
     public float getPrecision() {
-        return TP / (float) (TP + FP);
+        return (float) (TP / (TP + FP));
     }
 
     public float getF1() {
-        return 2 * TP / (2f * TP + FN + FP);
+        return (float) (2 * TP / (2f * TP + FN + FP));
     }
 
     public float getAccuracy() {
-        return (TP + TN) / (float) (TP + TN + FP + FN);
+        return (float) ((TP + TN) / (float) (TP + TN + FP + FN));
     }
 
     public static ConfusionMatrix loadLibSVM(String goldPath, String predPath, double... cutoffs) {
@@ -91,5 +112,69 @@ public class ConfusionMatrix {
     @Override
     public String toString() {
         return "TP = " + TP + "\tTN = " + TN + "\tFP = " + FP + "\tFN = " + FN;
+    }
+
+    private ConfusionMatrix nextResultFromPosterior() {
+        if (beta_PF == null) {
+            beta_PF = new Beta(0.5d + TP + FP, 0.5 + FN + TN, re);
+            beta_retr = new Beta(0.5d + TP, 0.5 + FP, re);
+            beta_unretr = new Beta(0.5d + FN, 0.5 + TN, re);
+        }
+        double PF = beta_PF.nextDouble();
+        double retr = beta_retr.nextDouble();
+        double unretr = beta_unretr.nextDouble();
+        double tp_proportion = retr * PF;
+        double fp_proportion = (1 - retr) * PF;
+        double fn_proportion = unretr * (1 - PF);
+        double tn_proportion = 1 - (tp_proportion + fp_proportion + fn_proportion);
+        return new ConfusionMatrix(tp_proportion, tn_proportion, fp_proportion, fn_proportion);
+    }
+
+    private ConfusionMatrix[] sampleFromPosterior() {
+        if (sample == null) {
+            sample = range(0, DRAWS).boxed().
+                    map(i -> nextResultFromPosterior()).
+                    toArray(size -> new ConfusionMatrix[size]);
+        }
+        return sample;
+    }
+
+    public float getF1LowerBound() {
+        Percentile percentile = new Percentile();
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getF1()).toArray());
+        return (float) percentile.evaluate(100 * (1 - CONF_LEVEL));
+    }
+
+    public Pair<Float, Float> getF1CI() {
+        Percentile percentile = new Percentile();
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getF1()).toArray());
+        double alpha = (1 - CONF_LEVEL) / 2;
+        return Pair.of((float) percentile.evaluate(100 * alpha), (float) percentile.evaluate(100 * (1 - alpha)));
+    }
+
+    public float getRecallLowerBound() {
+        Percentile percentile = new Percentile();
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getRecall()).toArray());
+        return (float) percentile.evaluate(100 * (1 - CONF_LEVEL));
+    }
+
+    public Pair<Float, Float> getRecallCI() {
+        Percentile percentile = new Percentile();
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getRecall()).toArray());
+        double alpha = (1 - CONF_LEVEL) / 2;
+        return Pair.of((float) percentile.evaluate(100 * alpha), (float) percentile.evaluate(100 * (1 - alpha)));
+    }
+
+    public float getPrecisionLowerBound() {
+        Percentile percentile = new Percentile();
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getPrecision()).toArray());
+        return (float) percentile.evaluate(100 * (1 - CONF_LEVEL));
+    }
+
+    public Pair<Float, Float> getPrecisionCI() {
+        Percentile percentile = new Percentile();
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getPrecision()).toArray());
+        double alpha = (1 - CONF_LEVEL) / 2;
+        return Pair.of((float) percentile.evaluate(100 * alpha), (float) percentile.evaluate(100 * (1 - alpha)));
     }
 }
