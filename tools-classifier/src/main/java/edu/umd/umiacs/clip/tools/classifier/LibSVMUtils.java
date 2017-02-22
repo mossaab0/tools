@@ -35,6 +35,8 @@ import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 /**
  *
@@ -145,20 +147,9 @@ public class LibSVMUtils {
                 map(i -> appendLabel(features.get(i), label.get(i))).collect(toList());
     }
 
-    public static Pair<String, String> split(String line) {
-        line = line.replaceAll("\\s+", " ").trim();
-        int index = line.indexOf(" ");
-        return Pair.of(line.substring(0, index), line.substring(index).trim());
-    }
-
-    public static List<Pair<String, String>> split(List<String> lines) {
-        return range(0, lines.size()).boxed().map(i -> split(lines.get(i))).collect(toList());
-    }
-
     public static Map<Integer, Pair<Float, Float>> learnScalingModel(List<String> training) {
-        return training.stream().flatMap(line -> Stream.of(line.split(" ")).skip(1)).
-                map(pair -> pair.split(":")).
-                map(pair -> Pair.of(new Integer(pair[0]), new Float(pair[1]))).
+        return training.stream().map(LibSVMUtils::split).map(Pair::getRight).
+                flatMap(List::stream).
                 collect(groupingBy(Pair::getKey, ConcurrentHashMap::new,
                         reducing(Pair.of(0f, 0f),
                                 pair -> Pair.of(pair.getRight(), pair.getRight()),
@@ -171,20 +162,65 @@ public class LibSVMUtils {
                                 entry.getValue().getRight() - entry.getValue().getLeft())));
     }
 
+    public static Map<Integer, Pair<Double, Double>> learnZscoringModel(List<String> training) {
+        return training.stream().map(LibSVMUtils::split).map(Pair::getRight).
+                flatMap(List::stream).
+                collect(groupingBy(Pair::getKey, ConcurrentHashMap::new,
+                        reducing(new ArrayList<Float>(),
+                                pair -> asList(pair.getRight()),
+                                (p1, p2) -> Stream.of(p1, p2).flatMap(List::stream).collect(toList())))).
+                entrySet().stream().
+                map(entry -> Pair.of(entry.getKey(), entry.getValue().stream().mapToDouble(f -> f).toArray())).
+                collect(toMap(Entry::getKey,
+                        entry -> Pair.of(new Mean().evaluate(entry.getValue()), new StandardDeviation().evaluate(entry.getValue()))));
+    }
+
     public static List<String> applyScalingModel(Map<Integer, Pair<Float, Float>> model, List<String> examples) {
-        return examples.stream().map(line -> line.split(" ")).
-                map(fields -> fields[0] + (fields.length == 1 ? ""
-                : (" " + String.join(" ", Stream.of(fields).skip(1).
-                        map(pair -> pair.split(":")).
-                        map(pair -> Pair.of(new Integer(pair[0]), new Float(pair[1]))).
+        return examples.stream().map(LibSVMUtils::split).
+                map(p -> p.getLeft() + String.join(" ",
+                        p.getRight().stream().
                         map(pair -> Pair.of(pair.getLeft(),
-                        !model.containsKey(pair.getLeft()) ? 1f
-                        : ((pair.getRight() - model.get(pair.getLeft()).getLeft())
-                        / model.get(pair.getLeft()).getRight()))).
+                                !model.containsKey(pair.getLeft()) ? 1f
+                                : ((pair.getRight() - model.get(pair.getLeft()).getLeft())
+                                / model.get(pair.getLeft()).getRight()))).
                         //map(pair -> Pair.of(pair.getKey(), 2 * pair.getRight() - 1)).
                         filter(pair -> pair.getValue() != 0f).
-                        map(pair -> pair.getLeft() + ":" + pair.getRight()).collect(toList()))))).
+                        map(pair -> pair.getLeft() + ":" + pair.getRight()).collect(toList()))).
                 collect(toList());
+    }
+
+    public static List<String> applyZscoringModel(Map<Integer, Pair<Double, Double>> model, List<String> examples) {
+        return examples.stream().map(LibSVMUtils::split).
+                map(p -> p.getLeft() + String.join(" ",
+                        p.getRight().stream().
+                        map(pair -> Pair.of(pair.getLeft(),
+                                (!model.containsKey(pair.getLeft()) || model.get(pair.getLeft()).getRight() == 0) ? 1f
+                                : ((pair.getRight() - model.get(pair.getLeft()).getLeft())
+                                / model.get(pair.getLeft()).getRight()))).
+                        filter(pair -> pair.getRight().floatValue() != 0f).
+                        map(pair -> pair.getLeft() + ":" + pair.getRight().floatValue()).collect(toList()))).
+                collect(toList());
+    }
+
+    public static Pair<String, List<Pair<Integer, Float>>> split(String line) {
+        String[] fields = line.split(" ");
+        if (fields[0].isEmpty() || fields.length == 1) {
+            return Pair.of(fields[0], asList());
+        }
+        StringBuilder prefix = new StringBuilder();
+        int i = 0;
+        for (; i < fields.length; i++) {
+            int index = fields[i].indexOf(":");
+            if (index < 0 || !fields[i].substring(0, index).matches("[0-9]+")) {
+                prefix.append(fields[i]).append(" ");
+            } else {
+                break;
+            }
+        }
+        return Pair.of(prefix.toString(),
+                Stream.of(fields).skip(i).map(pair -> pair.split(":")).
+                map(pair -> Pair.of(new Integer(pair[0]), new Float(pair[1]))).
+                collect(toList()));
     }
 
     public static Pair<List<String>, List<String>> scale(Pair<List<String>, List<String>> pair) {
@@ -201,7 +237,7 @@ public class LibSVMUtils {
                 map(Entry::getKey).collect(toSet());
         return training.stream().map(line -> line.split(" ")).
                 map(fields -> fields[0] + " " + String.join(" ",
-                Stream.of(fields).skip(1).
+                        Stream.of(fields).skip(1).
                         filter(pair -> filtered.contains(new Integer(pair.substring(0, pair.indexOf(":"))))).
                         collect(toList()))).
                 map(String::trim).
