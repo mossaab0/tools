@@ -15,8 +15,6 @@
  */
 package edu.umd.umiacs.clip.tools.classifier;
 
-import edu.umd.umiacs.clip.tools.io.AllFiles;
-import static edu.umd.umiacs.clip.tools.io.AllFiles.lines;
 import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
 import java.util.Collection;
 import java.util.HashMap;

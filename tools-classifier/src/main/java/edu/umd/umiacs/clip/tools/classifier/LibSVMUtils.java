@@ -15,8 +15,6 @@
  */
 package edu.umd.umiacs.clip.tools.classifier;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import java.util.ArrayList;
 import static java.util.Arrays.asList;
 import java.util.Collection;
@@ -27,20 +25,23 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.reducing;
+import static java.util.stream.Collectors.toMap;
 
 /**
  *
- * @author mossaab
+ * @author Mossaab Bagdouri
  */
 public class LibSVMUtils {
 
@@ -148,7 +149,7 @@ public class LibSVMUtils {
     }
 
     public static Map<Integer, Pair<Float, Float>> learnScalingModel(List<String> training) {
-        return training.stream().map(LibSVMUtils::split).map(Pair::getRight).
+        return training.stream().map(LibSVMUtils::split).map(Triple::getMiddle).
                 flatMap(List::stream).
                 collect(groupingBy(Pair::getKey, ConcurrentHashMap::new,
                         reducing(Pair.of(0f, 0f),
@@ -163,7 +164,7 @@ public class LibSVMUtils {
     }
 
     public static Map<Integer, Pair<Double, Double>> learnZscoringModel(List<String> training) {
-        return training.stream().map(LibSVMUtils::split).map(Pair::getRight).
+        return training.stream().map(LibSVMUtils::split).map(Triple::getMiddle).
                 flatMap(List::stream).
                 collect(groupingBy(Pair::getKey, ConcurrentHashMap::new,
                         reducing(new ArrayList<Float>(),
@@ -177,35 +178,37 @@ public class LibSVMUtils {
 
     public static List<String> applyScalingModel(Map<Integer, Pair<Float, Float>> model, List<String> examples) {
         return examples.stream().map(LibSVMUtils::split).
-                map(p -> p.getLeft() + String.join(" ",
-                        p.getRight().stream().
+                map(triple -> triple.getLeft() + String.join(" ",
+                        triple.getMiddle().stream().
                         map(pair -> Pair.of(pair.getLeft(),
                                 !model.containsKey(pair.getLeft()) ? 1f
                                 : ((pair.getRight() - model.get(pair.getLeft()).getLeft())
                                 / model.get(pair.getLeft()).getRight()))).
                         //map(pair -> Pair.of(pair.getKey(), 2 * pair.getRight() - 1)).
                         filter(pair -> pair.getValue() != 0f).
-                        map(pair -> pair.getLeft() + ":" + pair.getRight()).collect(toList()))).
+                        map(pair -> pair.getLeft() + ":" + pair.getRight()).collect(toList()))
+                        + triple.getRight()).
                 collect(toList());
     }
 
     public static List<String> applyZscoringModel(Map<Integer, Pair<Double, Double>> model, List<String> examples) {
         return examples.stream().map(LibSVMUtils::split).
-                map(p -> p.getLeft() + String.join(" ",
-                        p.getRight().stream().
+                map(triple -> triple.getLeft() + String.join(" ",
+                        triple.getMiddle().stream().
                         map(pair -> Pair.of(pair.getLeft(),
                                 (!model.containsKey(pair.getLeft()) || model.get(pair.getLeft()).getRight() == 0) ? 1f
                                 : ((pair.getRight() - model.get(pair.getLeft()).getLeft())
                                 / model.get(pair.getLeft()).getRight()))).
                         filter(pair -> pair.getRight().floatValue() != 0f).
-                        map(pair -> pair.getLeft() + ":" + pair.getRight().floatValue()).collect(toList()))).
+                        map(pair -> pair.getLeft() + ":" + pair.getRight().floatValue()).collect(toList()))
+                        + triple.getRight()).
                 collect(toList());
     }
 
-    public static Pair<String, List<Pair<Integer, Float>>> split(String line) {
+    public static Triple<String, List<Pair<Integer, Float>>, String> split(String line) {
         String[] fields = line.split(" ");
         if (fields[0].isEmpty() || fields.length == 1) {
-            return Pair.of(fields[0], asList());
+            return Triple.of(fields[0], asList(), "");
         }
         StringBuilder prefix = new StringBuilder();
         int i = 0;
@@ -217,10 +220,23 @@ public class LibSVMUtils {
                 break;
             }
         }
-        return Pair.of(prefix.toString(),
-                Stream.of(fields).skip(i).map(pair -> pair.split(":")).
-                map(pair -> Pair.of(new Integer(pair[0]), new Float(pair[1]))).
-                collect(toList()));
+
+        List<Pair<Integer, Float>> pairs = new ArrayList<>();
+
+        for (; i < fields.length; i++) {
+            if (fields[i].startsWith("#")) {
+                break;
+            }
+            int index = fields[i].indexOf(":");
+            pairs.add(Pair.of(new Integer(fields[i].substring(0, index)), new Float(fields[i].substring(index + 1))));
+        }
+
+        StringBuilder suffix = new StringBuilder();
+        for (; i < fields.length; i++) {
+            suffix.append(" ").append(fields[i]);
+        }
+
+        return Triple.of(prefix.toString(), pairs, suffix.toString());
     }
 
     public static Pair<List<String>, List<String>> scale(Pair<List<String>, List<String>> pair) {
