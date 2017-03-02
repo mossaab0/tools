@@ -75,6 +75,7 @@ public class OSTools {
             }
             proc.waitFor();
             proc.destroy();
+            file.delete();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
