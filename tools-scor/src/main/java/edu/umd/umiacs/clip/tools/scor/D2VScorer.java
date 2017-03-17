@@ -40,11 +40,7 @@ public class D2VScorer extends Scorer {
     }
 
     public <T extends D2VScorer> T loadWord2Vec(String path) {
-        try {
-            word2vec = WordVectorUtils.loadTxt(new File(path));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        word2vec = WordVectorUtils.loadTxt(new File(path));
         return (T) this;
     }
 

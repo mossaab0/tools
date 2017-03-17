@@ -38,11 +38,7 @@ public abstract class W2VBM25Scorer extends BM25Scorer {
     }
 
     public <T extends W2VBM25Scorer> T loadWord2Vec(String path) {
-        try {
-            word2vec = WordVectorUtils.loadTxt(new File(path));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        word2vec = WordVectorUtils.loadTxt(new File(path));
         return (T) this;
     }
 

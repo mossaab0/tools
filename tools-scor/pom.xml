@@ -10,7 +10,29 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <nd4j.backend>nd4j-native-platform</nd4j.backend>
+        <nd4j.version>0.8.0</nd4j.version>
+        <dl4j.version>0.8.0</dl4j.version>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.nd4j</groupId>
+                <artifactId>nd4j-native-platform</artifactId>
+                <version>${nd4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.nd4j</groupId>
+                <artifactId>nd4j-cuda-7.5-platform</artifactId>
+                <version>${nd4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.nd4j</groupId>
+                <artifactId>nd4j-cuda-8.0-platform</artifactId>
+                <version>${nd4j.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>edu.umd.umiacs.clip.tools</groupId>
@@ -18,9 +40,14 @@
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>edu.umd.umiacs.clip.tools</groupId>
+            <artifactId>tools-lang</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-nop</artifactId>
-            <version>1.7.21</version>
+            <version>1.7.24</version>
         </dependency>
         <dependency>
             <groupId>net.sf.trove4j</groupId>
@@ -28,20 +55,19 @@
             <version>3.0.3</version>
         </dependency>
         <dependency>
-            <groupId>org.nd4j</groupId>
-            <artifactId>nd4j-jblas</artifactId>
-            <version>0.4-rc3.6</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
-            <version>6.3.0</version>
+            <version>6.4.2</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.deeplearning4j/deeplearning4j-parent -->
         <dependency>
+            <groupId>org.nd4j</groupId>
+            <artifactId>${nd4j.backend}</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>deeplearning4j-nlp</artifactId>
-            <version>0.4-rc3.6</version>
+            <version>${dl4j.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.lucene</groupId>

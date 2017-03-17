@@ -52,6 +52,6 @@ public class JaccardScorer extends Scorer implements Serializable {
 
     @Override
     public Object getProcessedText(int docid) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
