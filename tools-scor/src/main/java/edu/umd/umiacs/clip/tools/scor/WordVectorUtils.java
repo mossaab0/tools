@@ -18,7 +18,6 @@ package edu.umd.umiacs.clip.tools.scor;
 import static edu.umd.umiacs.clip.tools.io.AllFiles.REMOVE_OLD_FILE;
 import edu.umd.umiacs.clip.tools.lang.LuceneUtils;
 import java.io.File;
-import java.io.IOException;
 import static java.lang.Float.parseFloat;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -51,7 +50,7 @@ public class WordVectorUtils {
     * @author Adam Gibson
     * @author raver119
      */
-    public static WordVectors loadTxt(File vectorsFile) {
+    public static WordVectors loadTxt(File vectorsFile, boolean... normalize) {
         AbstractCache cache = new AbstractCache<>();
         INDArray arrays[] = lines(vectorsFile.toPath()).
                 map(line -> line.split(" ")).
@@ -74,6 +73,9 @@ public class WordVectorUtils {
                 useAdaGrad(false).cache(cache).useHierarchicSoftmax(false).
                 build();
         Nd4j.clearNans(syn);
+        if (normalize.length > 0 && normalize[0]) {
+            syn.diviColumnVector(syn.norm2(1));
+        }
 
         lookupTable.setSyn0(syn);
 
@@ -83,8 +85,8 @@ public class WordVectorUtils {
         return vectors;
     }
 
-    public static WordVectors loadTxt(String path) {
-        return loadTxt(new File(path));
+    public static WordVectors loadTxt(String path, boolean... normalize) {
+        return loadTxt(new File(path), normalize);
     }
 
     public static void subset(String input, String output, Set<String> words, boolean loadOldVectorToMemory) {
@@ -106,7 +108,7 @@ public class WordVectorUtils {
         lines(input).map(line -> line.split(" ")).
                 filter(fields -> fields.length > 2).
                 map(fields -> Pair.of(fields[0].equals("</s>") ? fields[0] : LuceneUtils.enStem(fields[0]), Stream.of(fields).skip(1).collect(joining(" ")))).
-                filter(pair -> !allWords.contains(pair.getLeft())).
+                filter(pair -> !pair.getLeft().isEmpty() && !pair.getLeft().contains(" ") && !allWords.contains(pair.getLeft())).
                 peek(pair -> allWords.add(pair.getLeft())).
                 map(pair -> pair.getLeft() + " " + pair.getRight()).
                 forEach(lines::add);
