@@ -18,6 +18,7 @@ package edu.umd.umiacs.clip.tools.math;
 import static edu.umd.umiacs.clip.tools.math.MathUtils.minMaxScale;
 import static java.lang.Math.max;
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.reverseOrder;
 import java.util.List;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -51,26 +52,25 @@ public class CorrelationUtils {
         ).filter(Double::isFinite).sum() / (x.length - 1)) - 1;
     }
 
-    private static Pair<double[], double[]> sort(final double[] x, final double[] y) {
-        List<Pair<Double, Double>> list = range(0, x.length).boxed().
-                map(i -> Pair.of(x[i], y[i])).
-                sorted(comparing((Pair<Double, Double> pair) -> pair.getLeft()).
-                        reversed()).collect(toList());
-        double[] xSorted = list.stream().mapToDouble(Pair::getLeft).toArray();
-        double[] ySorted = list.stream().mapToDouble(Pair::getRight).toArray();
-        return Pair.of(xSorted, ySorted);
-    }
-
     public static double pr(final double[] xUnsorted, final double[] yUnsorted) {
         Pair<double[], double[]> pairs = sort(xUnsorted, yUnsorted);
         double[] x = minMaxScale(pairs.getLeft());
         double[] y = minMaxScale(pairs.getRight());
-        return range(1, x.length).mapToDouble(i -> x[i]
+        return range(1, x.length).parallel().mapToDouble(i -> x[i]
                 * (range(0, i).mapToDouble(j -> (x[j] - x[i]) * (y[j] - y[i])).sum())
                 / (Math.sqrt((range(0, i).mapToDouble(j -> Math.pow(x[j] - x[i], 2)).sum())
                         * (range(0, i).mapToDouble(j -> Math.pow(y[j] - y[i], 2)).sum())))).
                 sum() / range(1, x.length).mapToDouble(i -> x[i]).sum();
 
+    }
+
+    private static Pair<double[], double[]> sort(final double[] x, final double[] y) {
+        List<Pair<Double, Double>> list = range(0, x.length).boxed().
+                map(i -> Pair.of(x[i], y[i])).
+                sorted(comparing(Pair::getLeft, reverseOrder())).collect(toList());
+        double[] xSorted = list.stream().mapToDouble(Pair::getLeft).toArray();
+        double[] ySorted = list.stream().mapToDouble(Pair::getRight).toArray();
+        return Pair.of(xSorted, ySorted);
     }
 
     public static void main(String[] args) {
