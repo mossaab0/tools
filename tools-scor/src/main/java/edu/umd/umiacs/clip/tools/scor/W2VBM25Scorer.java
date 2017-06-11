@@ -17,7 +17,6 @@ package edu.umd.umiacs.clip.tools.scor;
 
 import gnu.trove.map.TObjectIntMap;
 import java.io.File;
-import java.io.IOException;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 
 /**
