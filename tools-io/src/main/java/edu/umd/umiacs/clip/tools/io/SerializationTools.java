@@ -37,11 +37,11 @@ public class SerializationTools {
 
         try (ObjectOutputStream out = new ObjectOutputStream(new BZip2CompressorOutputStream(new FileOutputStream(tmp)))) {
             out.writeObject(object);
-            new File(path).delete();
-            new File(tmp).renameTo(new File(path));
         } catch (IOException e) {
             e.printStackTrace();
         }
+        new File(path).delete();
+        new File(tmp).renameTo(new File(path));
     }
 
     public static Object deserialize(String path) {
