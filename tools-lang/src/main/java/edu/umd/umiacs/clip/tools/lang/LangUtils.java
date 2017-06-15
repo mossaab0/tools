@@ -93,7 +93,7 @@ public class LangUtils {
         if (input.isEmpty()) {
             return new HashMap<>();
         }
-        return Stream.of(input.split(" +")).
+        return Stream.of(input.split("\\s+")).
                 collect(groupingBy(identity(), reducing(0, e -> 1, Integer::sum)));
     }
 
