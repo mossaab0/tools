@@ -23,6 +23,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 
 /**
  *
@@ -34,8 +36,11 @@ public class SerializationTools {
         String tmp = path + "._SAVING";
         new File(tmp).delete();
         new File(tmp).getParentFile().mkdirs();
-
-        try (ObjectOutputStream out = new ObjectOutputStream(new BZip2CompressorOutputStream(new FileOutputStream(tmp)))) {
+        try (FileOutputStream os = new FileOutputStream(tmp);
+                ObjectOutputStream out = new ObjectOutputStream(
+                        path.endsWith(".bz2") ? new BZip2CompressorOutputStream(os)
+                        : path.endsWith(".gz") ? new GzipCompressorOutputStream(os)
+                        : os)) {
             out.writeObject(object);
         } catch (IOException e) {
             e.printStackTrace();
@@ -45,7 +50,12 @@ public class SerializationTools {
     }
 
     public static Object deserialize(String path) {
-        try (ObjectInputStream in = new ObjectInputStream(new BZip2CompressorInputStream(new FileInputStream(path)))) {
+
+        try (FileInputStream is = new FileInputStream(path);
+                ObjectInputStream in = new ObjectInputStream(
+                        path.endsWith(".bz2") ? new BZip2CompressorInputStream(is)
+                        : path.endsWith(".gz") ? new GzipCompressorInputStream(is)
+                        : is)) {
             return in.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
