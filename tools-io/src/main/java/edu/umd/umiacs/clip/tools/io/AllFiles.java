@@ -127,6 +127,11 @@ public class AllFiles {
         return lines;
     }
 
+    public static Stream<String> lines(InputStream is) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(is, UTF_8.newDecoder().onMalformedInput(IGNORE)));
+        return br.lines().onClose(asUncheckedRunnable(br));
+    }
+
     protected static Runnable asUncheckedRunnable(Closeable c) {
         return () -> {
             try {
