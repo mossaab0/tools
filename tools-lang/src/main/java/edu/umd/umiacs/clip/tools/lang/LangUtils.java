@@ -137,12 +137,4 @@ public class LangUtils {
                 map(set -> String.join(sep, set.stream().collect(toList()))).
                 collect(toList()));
     }
-
-    public static void main(String[] args) {
-        String input = "How are you?\n?today?? :-)";
-        //System.out.println(ngrams(input, 1, 3, "_", false));
-        //System.out.println(toFreqMap(""));
-        //System.out.println(tokenizeKeepPunctuation(input));
-        System.out.println(charNgrams("abc", 2, 3, true));
-    }
 }

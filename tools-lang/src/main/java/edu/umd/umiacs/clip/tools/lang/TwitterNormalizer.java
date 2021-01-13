@@ -52,11 +52,4 @@ public class TwitterNormalizer {
     public static String normalizeEnTweetDeepKeepPunctuation(String s) {
         return EmoticonUtils.removeFaces(s.replaceAll("\\s+", " ").replace("RT ", " ").replaceAll("@[^ ]+", " ").replaceAll("http[^ ]+", " ").replace("#", " ").replaceAll("\\s+", " ").trim()).replaceAll("(.+?)\\1{2,}", "$1");
     }
-    
-    public static void main(String[] args) {
-        String input = "@IsaKft Oh yeah, that's even worse! Where's his Blue Jays pride?? ;)";
-        String output = replaceArQuestionRemoveRTAndUserAndURLSepPunctLowCase(input);
-        System.out.println(output);
-        System.out.println(String.join(" ", asList("econ help 10 pts !!!!!!!?".replace("؟", "?").replaceAll("(.+?)\\1{2,}", "$1").split("\\s+|(?=\\p{Punct})|(?<=\\p{Punct})"))));
-    }
 }

@@ -89,10 +89,4 @@ public class LuceneUtils {
             return s.replaceAll("\\s+", " ").trim();
         }
     }
-
-    public static void main(String[] args) {
-        System.out.println(arStem("المفكرون"));
-        System.out.println(enStem("countries"));
-        System.out.println(frStem("villes"));
-    }
 }
