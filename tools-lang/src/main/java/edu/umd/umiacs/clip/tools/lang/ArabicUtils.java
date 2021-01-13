@@ -16,6 +16,8 @@
 package edu.umd.umiacs.clip.tools.lang;
 
 import java.text.Normalizer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +26,8 @@ import java.util.regex.Pattern;
  * @author Mossaab Bagdouri
  */
 public class ArabicUtils {
+
+    private static final Map<String, Pattern> REGEX_PATTERNS = new HashMap<String, Pattern>();
 
     public static final char COMMA = '\u060C';
 
@@ -216,6 +220,21 @@ public class ArabicUtils {
     private static final Pattern LETTERS_DIGITS_PATTERN = Pattern.compile("([" + ALL_ARABIC_LETTERS_AND_HINDI_DIGITS + "a-zA-Z0-9]*)?([^" + ALL_ARABIC_LETTERS_AND_HINDI_DIGITS + "a-zA-Z0-9]*)?");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
 
+    public static Pattern getPattern(String regex) {
+        if (!REGEX_PATTERNS.containsKey(regex)) {
+            synchronized (REGEX_PATTERNS) {
+                if (!REGEX_PATTERNS.containsKey(regex)) {
+                    REGEX_PATTERNS.put(regex, Pattern.compile(regex));
+                }
+            }
+        }
+        return REGEX_PATTERNS.get(regex);
+    }
+
+    public static String replaceAll(String in, String regex, String replacement) {
+        return getPattern(regex).matcher(in).replaceAll(replacement);
+    }
+
     public static String patternTonkenize(String string) {
         return patternTonkenize(string, false);
     }
@@ -274,20 +293,20 @@ public class ArabicUtils {
     }
 
     public static String normalizeAlef(String s) {
-        return s.replaceAll("[" + ALEF_MADDA + ALEF_HAMZA_ABOVE + ALEF_HAMZA_BELOW + ALEF_WASLA + "]", "" + ALEF);
+        return replaceAll(s, "[" + ALEF_MADDA + ALEF_HAMZA_ABOVE + ALEF_HAMZA_BELOW + ALEF_WASLA + "]", "" + ALEF);
     }
 
     public static String normalizeDigits(String s) {
-        s = s.replaceAll("[" + EXT_INDIC_DIGIT_ZERO + INDIC_DIGIT_ZERO + "]", "0");
-        s = s.replaceAll("[" + EXT_INDIC_DIGIT_ONE + INDIC_DIGIT_ONE + "]", "1");
-        s = s.replaceAll("[" + EXT_INDIC_DIGIT_TWO + INDIC_DIGIT_TWO + "]", "2");
-        s = s.replaceAll("[" + EXT_INDIC_DIGIT_THREE + INDIC_DIGIT_THREE + "]", "3");
-        s = s.replaceAll("[" + EXT_INDIC_DIGIT_FOUR + INDIC_DIGIT_FOUR + "]", "4");
-        s = s.replaceAll("[" + EXT_INDIC_DIGIT_FIVE + INDIC_DIGIT_FIVE + "]", "5");
-        s = s.replaceAll("[" + EXT_INDIC_DIGIT_SIX + INDIC_DIGIT_SIX + "]", "6");
-        s = s.replaceAll("[" + EXT_INDIC_DIGIT_SEVEN + INDIC_DIGIT_SEVEN + "]", "7");
-        s = s.replaceAll("[" + EXT_INDIC_DIGIT_EIGHT + INDIC_DIGIT_EIGHT + "]", "8");
-        s = s.replaceAll("[" + EXT_INDIC_DIGIT_NINE + INDIC_DIGIT_NINE + "]", "9");
+        s = replaceAll(s, "[" + EXT_INDIC_DIGIT_ZERO + INDIC_DIGIT_ZERO + "]", "0");
+        s = replaceAll(s, "[" + EXT_INDIC_DIGIT_ONE + INDIC_DIGIT_ONE + "]", "1");
+        s = replaceAll(s, "[" + EXT_INDIC_DIGIT_TWO + INDIC_DIGIT_TWO + "]", "2");
+        s = replaceAll(s, "[" + EXT_INDIC_DIGIT_THREE + INDIC_DIGIT_THREE + "]", "3");
+        s = replaceAll(s, "[" + EXT_INDIC_DIGIT_FOUR + INDIC_DIGIT_FOUR + "]", "4");
+        s = replaceAll(s, "[" + EXT_INDIC_DIGIT_FIVE + INDIC_DIGIT_FIVE + "]", "5");
+        s = replaceAll(s, "[" + EXT_INDIC_DIGIT_SIX + INDIC_DIGIT_SIX + "]", "6");
+        s = replaceAll(s, "[" + EXT_INDIC_DIGIT_SEVEN + INDIC_DIGIT_SEVEN + "]", "7");
+        s = replaceAll(s, "[" + EXT_INDIC_DIGIT_EIGHT + INDIC_DIGIT_EIGHT + "]", "8");
+        s = replaceAll(s, "[" + EXT_INDIC_DIGIT_NINE + INDIC_DIGIT_NINE + "]", "9");
         return s;
     }
 
@@ -298,31 +317,31 @@ public class ArabicUtils {
         s = s.replace("" + TEH_MARBUTA_GOAL, "" + TEH_MARBUTA);
         s = s.replace("" + SMALL_HIGH_LAM_ALEF, LAM + "" + ALEF);
         s = s.replace("" + SMALL_HIGH_DOTLESS_HEAD_OF_KHAH, "" + HAH);
-        s = s.replaceAll("[" + ALEF_WAVY_HAMZA_ABOVE + HIGH_HAMZA_ALEF + "]", "" + ALEF_HAMZA_ABOVE);
-        s = s.replaceAll("[" + HIGH_HAMZA + SINDHI_AMPERSAND + "]", "" + HAMZA);
-        s = s.replaceAll("[" + HIGH_HAMZA_WAW + U_HIGH_HAMZA_ABOVE + "]", "" + WAW_HAMZA);
-        s = s.replaceAll("[" + TTEH + TTEHEH + TEH_RING + "]", "" + TEH);
-        s = s.replaceAll("[" + BEEH + PEH + BEHEH + DOTLESS_BEH + "]", "" + BEH);
-        s = s.replaceAll("[" + TEH_THREE_DOTS_DOWNWARDS + TEHEH + "]", "" + THEH);
-        s = s.replaceAll("[" + HAH_HAMZA_ABOVE + HAH_TWO_DOTS_ABOVE + HAH_THREE_DOTS_ABOVE + "]", "" + KHAH);
-        s = s.replaceAll("[" + NYEH + DYEH + TCHEH + TCHEHEH + SMALL_HIGH_JEEM + "]", "" + JEEM);
-        s = s.replaceAll("[" + DDAL + "-" + DAL_DOT_BELOW_SMALL_TAH + DDAHAL + "]", "" + DAL);
-        s = s.replaceAll("[" + DAHAL + DUL + "-" + DAL_FOUR_DOTS_ABOVE + DAL_INVERTED_V + "]", "" + THAL);
-        s = s.replaceAll("[" + RREH + REH_RING + "-" + REH_DOT_BELOW_ABOVE + "]", "" + REH);
-        s = s.replaceAll("[" + REH_SMALL_V_ABOVE + REH_TWO_DOTS_ABOVE + "-" + REH_FOUR_DOTS_ABOVE + REH_INVERTED_V + "]", "" + ZAIN);
-        s = s.replaceAll("[" + SEEN_DOT_BELOW_ABOVE + SEEN_THREE_DOTS_BELOW + SMALL_HIGH_SEEN + SMALL_LOW_SEEN + "]", "" + SEEN);
-        s = s.replaceAll("[" + SEEN_THREE_DOTS_ABOVE_BELOW + SHEEN_DOT_BELOW + "]", "" + SHEEN);
-        s = s.replaceAll("[" + SAD_THREE_DOTS_ABOVE + DAD_DOT_BELOW + "]", "" + DAD);
-        s = s.replaceAll("[" + AIN_THREE_DOTS_ABOVE + GHAIN_DOT_BELOW + "]", "" + GHAIN);
-        s = s.replaceAll("[" + DOTLESS_FEH + "-" + PEHEH + "]", "" + FEH);
-        s = s.replaceAll("[" + DOTLESS_QAF + QAF_ONE_DOT_ABOVE + QAF_THREE_DOTS_ABOVE + "]", "" + QAF);
-        s = s.replaceAll("[" + LAM_SMALL_V + "-" + LAM_THREE_DOTS_ABOVE + "]", "" + LAM);
-        s = s.replaceAll("[" + NOON_ONE_DOT_BELOW + "-" + NOON_THREE_DOTS_ABOVE + SMALL_HIGH_NOON + "]", "" + NOON);
-        s = s.replaceAll("[" + KEHEH + "-" + GAF_THREE_DOTS_ABOVE + "]", "" + KAF);
-        s = s.replaceAll("[" + HEH_DOACHASHMEE + HEH_YEH_ABOVE + "-" + HEH_GOAL_HAMZA_ABOVE + AE + HEH_INVERTED_V + "]", "" + HEH);
-        s = s.replaceAll("[" + WAW_RING + "-" + VE + WAW_DOT_ABOVE + SMALL_WAW + "]", "" + WAW);
-        s = s.replaceAll("[" + HIGH_HAMZA_YEH + FARSI_YEH + "-" + YEH_SMALL_V + E + "-" + YEH_BAREE_HAMZA_ABOVE + SMALL_YEH + SMALL_HIGH_YEH + "]", "" + YEH);
-        s = s.replaceAll("[" + SMALL_HIGH_MEEM_INITIAL_FORM + SMALL_HIGH_MEEM_ISOLATED_FORM + SMALL_LOW_MEEM + SINDHI_POSTPOSITION_MEN + "]", "" + MEEM);
+        s = replaceAll(s, "[" + ALEF_WAVY_HAMZA_ABOVE + HIGH_HAMZA_ALEF + "]", "" + ALEF_HAMZA_ABOVE);
+        s = replaceAll(s, "[" + HIGH_HAMZA + SINDHI_AMPERSAND + "]", "" + HAMZA);
+        s = replaceAll(s, "[" + HIGH_HAMZA_WAW + U_HIGH_HAMZA_ABOVE + "]", "" + WAW_HAMZA);
+        s = replaceAll(s, "[" + TTEH + TTEHEH + TEH_RING + "]", "" + TEH);
+        s = replaceAll(s, "[" + BEEH + PEH + BEHEH + DOTLESS_BEH + "]", "" + BEH);
+        s = replaceAll(s, "[" + TEH_THREE_DOTS_DOWNWARDS + TEHEH + "]", "" + THEH);
+        s = replaceAll(s, "[" + HAH_HAMZA_ABOVE + HAH_TWO_DOTS_ABOVE + HAH_THREE_DOTS_ABOVE + "]", "" + KHAH);
+        s = replaceAll(s, "[" + NYEH + DYEH + TCHEH + TCHEHEH + SMALL_HIGH_JEEM + "]", "" + JEEM);
+        s = replaceAll(s, "[" + DDAL + "-" + DAL_DOT_BELOW_SMALL_TAH + DDAHAL + "]", "" + DAL);
+        s = replaceAll(s, "[" + DAHAL + DUL + "-" + DAL_FOUR_DOTS_ABOVE + DAL_INVERTED_V + "]", "" + THAL);
+        s = replaceAll(s, "[" + RREH + REH_RING + "-" + REH_DOT_BELOW_ABOVE + "]", "" + REH);
+        s = replaceAll(s, "[" + REH_SMALL_V_ABOVE + REH_TWO_DOTS_ABOVE + "-" + REH_FOUR_DOTS_ABOVE + REH_INVERTED_V + "]", "" + ZAIN);
+        s = replaceAll(s, "[" + SEEN_DOT_BELOW_ABOVE + SEEN_THREE_DOTS_BELOW + SMALL_HIGH_SEEN + SMALL_LOW_SEEN + "]", "" + SEEN);
+        s = replaceAll(s, "[" + SEEN_THREE_DOTS_ABOVE_BELOW + SHEEN_DOT_BELOW + "]", "" + SHEEN);
+        s = replaceAll(s, "[" + SAD_THREE_DOTS_ABOVE + DAD_DOT_BELOW + "]", "" + DAD);
+        s = replaceAll(s, "[" + AIN_THREE_DOTS_ABOVE + GHAIN_DOT_BELOW + "]", "" + GHAIN);
+        s = replaceAll(s, "[" + DOTLESS_FEH + "-" + PEHEH + "]", "" + FEH);
+        s = replaceAll(s, "[" + DOTLESS_QAF + QAF_ONE_DOT_ABOVE + QAF_THREE_DOTS_ABOVE + "]", "" + QAF);
+        s = replaceAll(s, "[" + LAM_SMALL_V + "-" + LAM_THREE_DOTS_ABOVE + "]", "" + LAM);
+        s = replaceAll(s, "[" + NOON_ONE_DOT_BELOW + "-" + NOON_THREE_DOTS_ABOVE + SMALL_HIGH_NOON + "]", "" + NOON);
+        s = replaceAll(s, "[" + KEHEH + "-" + GAF_THREE_DOTS_ABOVE + "]", "" + KAF);
+        s = replaceAll(s, "[" + HEH_DOACHASHMEE + HEH_YEH_ABOVE + "-" + HEH_GOAL_HAMZA_ABOVE + AE + HEH_INVERTED_V + "]", "" + HEH);
+        s = replaceAll(s, "[" + WAW_RING + "-" + VE + WAW_DOT_ABOVE + SMALL_WAW + "]", "" + WAW);
+        s = replaceAll(s, "[" + HIGH_HAMZA_YEH + FARSI_YEH + "-" + YEH_SMALL_V + E + "-" + YEH_BAREE_HAMZA_ABOVE + SMALL_YEH + SMALL_HIGH_YEH + "]", "" + YEH);
+        s = replaceAll(s, "[" + SMALL_HIGH_MEEM_INITIAL_FORM + SMALL_HIGH_MEEM_ISOLATED_FORM + SMALL_LOW_MEEM + SINDHI_POSTPOSITION_MEN + "]", "" + MEEM);
         s = s.replace("" + EXT_INDIC_DIGIT_ZERO, "" + INDIC_DIGIT_ZERO);
         s = s.replace("" + EXT_INDIC_DIGIT_ONE, "" + INDIC_DIGIT_ONE);
         s = s.replace("" + EXT_INDIC_DIGIT_TWO, "" + INDIC_DIGIT_TWO);
@@ -343,18 +362,22 @@ public class ArabicUtils {
         s = removeDiacritics(s);
         s = normalizeAlef(s);
         s = s.replace(ALEF_MAKSURA, YEH);
-        s = s.replaceAll("[" + WAW_HAMZA + YEH_HAMZA + "]", "" + HAMZA);
+        s = replaceAll(s, "[" + WAW_HAMZA + YEH_HAMZA + "]", "" + HAMZA);
         s = s.replace(TEH_MARBUTA, HEH);
-        s = s.replaceAll("<a href=\"?([^>\"]+)\"?>", " $1 ").replace("</a>", " ");
+        s = replaceAll(s, "<a href=\"?([^>\"]+)\"?>", " $1 ").replace("</a>", " ");
         s = EmoticonUtils.normalizeFaces(s);
         return s;
     }
 
     public static String removeDiacritics(String s) {
-        return s.replaceAll("[" + TATWEEL + ALL_ARABIC_DIACRETICS + SUPERSCRIPT_ALEF + "]+", "");
+        return replaceAll(s, "[" + ALL_ARABIC_DIACRETICS + SUPERSCRIPT_ALEF + "]+", "");
+    }
+
+    public static String removeTatweel(String s) {
+        return s.replace(TATWEEL + "", "");
     }
 
     public static String removeNonCharacters(String s) {
-        return s.replaceAll("[\u2000-\u200F\u2028-\u202F\u205F-\u206F]+", " ");
+        return replaceAll(s, "[\u2000-\u200F\u2028-\u202F\u205F-\u206F]+", " ");
     }
 }

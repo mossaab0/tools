@@ -24,8 +24,8 @@ import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.ar.ArabicAnalyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.en.KStemFilter;
+import org.apache.lucene.analysis.fr.FrenchAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
@@ -35,17 +35,16 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  */
 public class LuceneUtils {
 
-    private static final EnglishAnalyzer EN = new EnglishAnalyzer();
-    private static final StandardAnalyzer NO_STOP_WORDS = new StandardAnalyzer(EMPTY_SET);
-    private static final StandardAnalyzer STANDARD_ANALYZER = new StandardAnalyzer();
-    private static final ArabicAnalyzer AR = new ArabicAnalyzer();
+    private static final Analyzer NO_STOP_WORDS_ANALYZER = new StandardAnalyzer(EMPTY_SET);
+    private static final Analyzer STANDARD_ANALYZER = new StandardAnalyzer();
+    private static final Analyzer AR = new ArabicAnalyzer();
+    private static final Analyzer FR = new FrenchAnalyzer();
+    private static final Analyzer EN = new EnglishAnalyzer();
     private static final Analyzer KROVETZ = new Analyzer() {
         @Override
         protected TokenStreamComponents createComponents(String fieldName) {
             final Tokenizer source = new StandardTokenizer();
-            TokenStream result = new StandardFilter(source);
-            result = new KStemFilter(result);
-            return new TokenStreamComponents(source, result);
+            return new TokenStreamComponents(source, new KStemFilter(source));
         }
     };
 
@@ -53,12 +52,16 @@ public class LuceneUtils {
         return stem(AR, s);
     }
 
+    public static String frStem(String s) {
+        return stem(FR, s);
+    }
+
     public static String enStem(String s) {
         return stem(EN, s);
     }
 
     public static String tokenizeUnstopped(String s) {
-        return stem(NO_STOP_WORDS, s);
+        return stem(NO_STOP_WORDS_ANALYZER, s);
     }
 
     public static String tokenizeStopped(String s) {
@@ -72,7 +75,7 @@ public class LuceneUtils {
     public static String stem(Analyzer analyzer, String s) {
         StringBuilder sb = new StringBuilder();
         try {
-            try (TokenStream stream = analyzer.tokenStream(null, new StringReader(s))) {
+            try ( TokenStream stream = analyzer.tokenStream(null, new StringReader(s))) {
                 CharTermAttribute cattr = stream.addAttribute(CharTermAttribute.class);
                 stream.reset();
                 while (stream.incrementToken()) {
@@ -90,5 +93,6 @@ public class LuceneUtils {
     public static void main(String[] args) {
         System.out.println(arStem("المفكرون"));
         System.out.println(enStem("countries"));
+        System.out.println(frStem("villes"));
     }
 }
