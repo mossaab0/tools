@@ -25,9 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
 import static java.nio.charset.CodingErrorAction.IGNORE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.newInputStream;
@@ -40,7 +38,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import org.anarres.parallelgzip.ParallelGZIPOutputStream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
@@ -108,7 +106,7 @@ public class GZIPFiles {
             throws IOException {
         Objects.requireNonNull(lines);
         OutputStream out = newOutputStream(path, options);
-        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(out), UTF_8.newEncoder().onMalformedInput(IGNORE)), BUFFER_SIZE)) {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new ParallelGZIPOutputStream(out), UTF_8.newEncoder().onMalformedInput(IGNORE)), BUFFER_SIZE)) {
             for (CharSequence line : lines) {
                 writer.append(line);
                 writer.newLine();

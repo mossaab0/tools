@@ -242,7 +242,7 @@ public class ArabicUtils {
     public static String patternTonkenize(String string, boolean reductRepetitions) {
         string = string.replaceAll("((https://www.|http://www.|https://|http://|www)[^\" >]*)", " $1 ");
         StringBuilder sb = new StringBuilder();
-        for (String s : string.split("\\s+")) {
+        for (String s : getPattern("\\s+").split(string)) {
             if (s.startsWith("www")) {
                 sb.append("http://").append(s).append(" ");
             } else if (s.startsWith("http") || s.startsWith("#") || s.startsWith("@") || s.matches("EMOTICON_[A-Z]+")) {
@@ -258,7 +258,7 @@ public class ArabicUtils {
             }
         }
 
-        return sb.toString().replaceAll("\\s+", " ").trim();
+        return getPattern("\\s+").matcher(sb.toString()).replaceAll(" ").trim();
     }
 
     private static void _normalPatternFlow(StringBuilder sb, String s, boolean reductRepetitions) {

@@ -19,8 +19,6 @@ import static edu.umd.umiacs.clip.tools.io.AllFiles.readAllLines;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import static java.lang.Long.min;
 import java.util.List;
 import java.util.Map;
@@ -51,25 +49,17 @@ public class D2VFeatureExtracter {
     public D2VFeatureExtracter(String word2vecPath, String vocabPath) {
         DF = new TObjectIntHashMap<>();
         List<String> lines = readAllLines(vocabPath);
-        N = new Long(lines.get(0).split(" ")[1]);
+        N = Long.valueOf(lines.get(0).split(" ")[1]);
         for (int i = 1; i < lines.size(); i++) {
             String[] pair = lines.get(i).split(" ");
-            int df = new Integer(pair[1]);
+            int df = Integer.valueOf(pair[1]);
             DF.put(pair[0], df);
         }
-        try {
-            word2vec = WordVectorSerializer.loadGoogleModel(new File(word2vecPath), false);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        word2vec = WordVectorSerializer.loadStaticModel(new File(word2vecPath));
     }
 
     public D2VFeatureExtracter(String word2vecPath) {
-        try {
-            word2vec = WordVectorSerializer.loadGoogleModel(new File(word2vecPath), false);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        word2vec = WordVectorSerializer.loadStaticModel(new File(word2vecPath));
     }
 
     public List<Double> getStemmedVector(String text) {

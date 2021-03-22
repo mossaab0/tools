@@ -82,12 +82,12 @@ public class ConfusionMatrix {
 
     public static ConfusionMatrix loadLibSVM(String goldPath, String predPath, double... cutoffs) {
         int[] gold = readAllLines(goldPath).stream().
-                mapToInt(line -> new Integer(line.split("\\s+")[0]))
+                mapToInt(line -> Integer.valueOf(line.split("\\s+")[0]))
                 .toArray();
         IntSummaryStatistics stats = Arrays.stream(gold).summaryStatistics();
         double cutoff = stats.getMin() == stats.getMax() ? cutoffs[0] : ((stats.getMax() + stats.getMin()) / 2);
         List<Boolean> goldList = Arrays.stream(gold).boxed().map(i -> i > cutoff).collect(toList());
-        List<Boolean> predList = readAllLines(predPath).stream().map(pred -> new Double(pred) > cutoff).collect(toList());
+        List<Boolean> predList = readAllLines(predPath).stream().map(pred -> Double.valueOf(pred) > cutoff).collect(toList());
         return new ConfusionMatrix(goldList, predList);
     }
 
@@ -98,7 +98,7 @@ public class ConfusionMatrix {
         double R[] = range(0, 2).mapToDouble(i -> r[i] * N_TOTAL / (n[0] + n[1])).toArray();
         double Var_R[] = range(0, 2).
                 mapToDouble(i -> Math.pow(N[i], 2) * r[i] * (1 - r[i] / n[i])
-                        / Math.pow(n[i], 2)).toArray();
+                / Math.pow(n[i], 2)).toArray();
         double temp = 2 * R[1] / Math.pow(R[1] + R[0] + N[1], 2);
         double Var_F1_1 = Math.pow(2 / (R[1] + R[0] + N[1]) - temp, 2);
         double Var_F1_0 = Math.pow(temp, 2);
@@ -133,46 +133,46 @@ public class ConfusionMatrix {
         if (sample == null) {
             sample = range(0, DRAWS).boxed().
                     map(i -> nextResultFromPosterior()).
-                    toArray(size -> new ConfusionMatrix[size]);
+                    toArray(ConfusionMatrix[]::new);
         }
         return sample;
     }
 
     public float getF1LowerBound() {
         Percentile percentile = new Percentile();
-        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getF1()).toArray());
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(ConfusionMatrix::getF1).toArray());
         return (float) percentile.evaluate(100 * (1 - CONF_LEVEL));
     }
 
     public Pair<Float, Float> getF1CI() {
         Percentile percentile = new Percentile();
-        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getF1()).toArray());
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(ConfusionMatrix::getF1).toArray());
         double alpha = (1 - CONF_LEVEL) / 2;
         return Pair.of((float) percentile.evaluate(100 * alpha), (float) percentile.evaluate(100 * (1 - alpha)));
     }
 
     public float getRecallLowerBound() {
         Percentile percentile = new Percentile();
-        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getRecall()).toArray());
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(ConfusionMatrix::getRecall).toArray());
         return (float) percentile.evaluate(100 * (1 - CONF_LEVEL));
     }
 
     public Pair<Float, Float> getRecallCI() {
         Percentile percentile = new Percentile();
-        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getRecall()).toArray());
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(ConfusionMatrix::getRecall).toArray());
         double alpha = (1 - CONF_LEVEL) / 2;
         return Pair.of((float) percentile.evaluate(100 * alpha), (float) percentile.evaluate(100 * (1 - alpha)));
     }
 
     public float getPrecisionLowerBound() {
         Percentile percentile = new Percentile();
-        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getPrecision()).toArray());
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(ConfusionMatrix::getPrecision).toArray());
         return (float) percentile.evaluate(100 * (1 - CONF_LEVEL));
     }
 
     public Pair<Float, Float> getPrecisionCI() {
         Percentile percentile = new Percentile();
-        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(cm -> cm.getPrecision()).toArray());
+        percentile.setData(Stream.of(sampleFromPosterior()).parallel().mapToDouble(ConfusionMatrix::getPrecision).toArray());
         double alpha = (1 - CONF_LEVEL) / 2;
         return Pair.of((float) percentile.evaluate(100 * alpha), (float) percentile.evaluate(100 * (1 - alpha)));
     }
